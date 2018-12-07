@@ -1168,6 +1168,21 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
         self.do_set_mode_via_command_long("HOLD")
         self.do_set_mode_via_command_long("MANUAL")
 
+    def test_initial_mode(self):
+        self.mavproxy.send('switch 3\n')  # rtl mode
+        self.wait_mode('RTL')
+        self.mavproxy.send('switch 6\n')  # Manual mode
+        self.wait_mode('MANUAL')
+        self.set_parameter("INITIAL_MODE", 1) # acro
+        self.reboot_sitl()
+        self.wait_mode(1)
+        self.progress("Make sure we stay in this mode")
+        self.delay_sim_time(5)
+        self.wait_mode(1)
+        # now change modes with a switch:
+        self.mavproxy.send('switch 3\n')  # rtl mode
+        self.wait_mode('RTL')
+
     def test_mavproxy_do_set_mode_via_command_long(self):
         self.mavproxy_do_set_mode_via_command_long("HOLD")
         self.mavproxy_do_set_mode_via_command_long("MANUAL")
@@ -5779,6 +5794,10 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
             ("EndMissionBehavior",
              "Test end mission behavior",
              self.test_end_mission_behavior),
+
+            ("INITIAL_MODE",
+             "Test INITIAL_MODE",
+             self.test_initial_mode),
 
             ("LogUpload",
              "Upload logs",
