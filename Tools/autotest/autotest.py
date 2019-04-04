@@ -45,9 +45,118 @@ def buildlogs_path(path):
         bits.append(path)
     return os.path.join(*bits)
 
+# flogged from apj_tool.py:
+def split_multi(str, separators):
+    '''split a string, handling multiple separators'''
+    for sep in separators:
+        str = str.replace(sep, ' ')
+    return str.split()
+
+def read_defaults_file(afile):
+    ret = dict()
+    with open(afile) as foo:
+        line = 1
+        while True:
+            content = foo.readline()
+            if content is None:
+                break
+            i = content.find("#")
+            if i != -1:
+                content = content[0:i]
+            if len(content) == 0:
+                break;
+            if (len(content) == 3 and
+                content[0] == chr(0xef) and
+                content[1] == chr(0xbb) and
+                content[2] == chr(0xbf)):
+                raise ValueError("File contains byte order mark")
+            if content.isspace():
+                continue
+            a = split_multi(content, ", =\t")
+            if len(a) != 2:
+                raise ValueError("Parse error for (%s) on line %u" % (content, line))
+            ret[a[0]] = a[1]
+            line += 1
+    return ret
+
+def frame_params_files(atype):
+    '''files present for real vehicles in Tools/Frame_params'''
+    if atype == "ArduCopter":
+        return ["SkyViper-2450GPS/defaults.parm",
+                "Solo_Copter-3.5_GreenCube.param",
+                "Solo_Copter-3.6_GreenCube.param",
+                "Solo_Copter-3.7_GreenCube.param",
+                "Solo_Copter-3.7_BlackCube.param",
+        ]
+    return []
+
+def default_params_files(atype):
+    '''files present for simulated vehicles in Tools/autotest/default_params'''
+
+    if atype == "ArduCopter":
+        ret = []
+        globbed = [ os.path.basename(x) for x in glob.glob("Tools/autotest/default_params/copter*") ]
+        globbed = list(filter(lambda x : (x != "copter-AVC2013.parm" and
+                                          x != "copter-heli-dual.parm" and
+                                          x != "copter-heli.parm"), globbed))
+        ret.extend(globbed)
+        return ret
+    return []
+
+def check_frame_defaults_file(defaultshash, frame_param):
+    print("  checking frame file (%s)" % frame_param)
+    check_defaults_filepath(defaultshash, "Tools/Frame_params/%s" % frame_param)
+
+def check_defaults_file(defaultshash, default_param_file):
+    print("  checking defaults file (%s)" % default_param_file)
+    check_defaults_filepath(defaultshash, "Tools/autotest/default_params/%s" % default_param_file)
+
+def check_defaults_filepath(defaultshash, filepath):
+    otherhash = read_defaults_file(filepath)
+    # start by removing anything that is present in the defaults file:
+    for key in defaultshash.keys():
+        if key in otherhash:
+            if float(defaultshash[key]) == float(otherhash[key]):
+                print("    Same as default: %s" % key)
+            del otherhash[key]
+    # now remove stuff which you can't really expect to be in the
+    # defaults we generate from SITL:
+    for prefix in "BRD_", "TMODE_", "RSSI_":
+        remove = []
+        for key in otherhash.keys():
+            if key.startswith(prefix):
+                remove.append(key)
+        for key in remove:
+            del otherhash[key]
+
+    if len(otherhash) != 0:
+        print("    unknown keys: %s" % str(otherhash))
+
+def check_frame_params(atype, defaultsfile):
+    """checks all Frame_params defaults files to ensure they're not
+    specifying a parameter that doesn't exist"""
+    print("Checking frame defaults against (%s)" % defaultsfile)
+    defaultshash = read_defaults_file(defaultsfile)
+
+    # ensure we know the general shape of what's in the defaults file:
+    for prefix in ["TMODE_"]:
+        for key in defaultshash.keys():
+            if key.startswith(prefix):
+                print("Key (%s) with bad prefix (%s) present in generated defaults" %
+                      (key, prefix))
+                sys.exit(1)
+
+    for frame_param in frame_params_files(atype):
+        check_frame_defaults_file(defaultshash, frame_param)
+    for default_param in default_params_files(atype):
+        check_defaults_file(defaultshash, default_param)
 
 def get_default_params(atype, binary):
     """Get default parameters."""
+
+    dest = buildlogs_path('%s-defaults.parm' % atype)
+#    check_frame_params(atype, dest)
+#    sys.exit(0)
 
     # use rover simulator so SITL is not starved of input
     HOME = mavutil.location(40.071374969556928,
@@ -77,11 +186,13 @@ def get_default_params(atype, binary):
         mavproxy = util.start_MAVProxy_SITL(atype)
         mavproxy.expect('Saved [0-9]+ parameters to (\S+)')
     parmfile = mavproxy.match.group(1)
-    dest = buildlogs_path('%s-defaults.parm' % atype)
     shutil.copy(parmfile, dest)
     util.pexpect_close(mavproxy)
     util.pexpect_close(sitl)
     print("Saved defaults for %s to %s" % (atype, dest))
+
+    check_frame_params(atype, dest)
+
     return True
 
 
