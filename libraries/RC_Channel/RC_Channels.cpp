@@ -29,6 +29,8 @@ extern const AP_HAL::HAL& hal;
 
 #include "RC_Channel.h"
 
+RC_Channel RC_Channels::dummy;
+
 /*
   channels group object constructor
  */

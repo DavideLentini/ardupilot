@@ -864,3 +864,8 @@ bool RC_Channels::duplicate_options_exist()
     }
    return false;
 }
+
+bool RC_Channel::is_dummy() const
+{
+    return this == rc().dummy_channel();
+}

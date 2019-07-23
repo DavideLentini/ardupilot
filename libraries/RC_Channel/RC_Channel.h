@@ -178,6 +178,8 @@ public:
     };
     typedef enum AUX_FUNC aux_func_t;
 
+    bool is_dummy() const;
+
 protected:
 
     // auxillary switch handling (n.b.: we store this as 2-bits!):
@@ -204,7 +206,6 @@ protected:
     virtual void mode_switch_changed(modeswitch_pos_t new_pos) {
         // no action by default (e.g. Tracker, Sub, who do their own thing)
     };
-
 
 private:
 
@@ -357,6 +358,8 @@ public:
         return _override_timeout.get() * 1e3f;
     }
 
+    RC_Channel *dummy_channel() { return &dummy; }
+
 protected:
 
     enum class Option {
@@ -373,6 +376,10 @@ private:
     static RC_Channels *_singleton;
     // this static arrangement is to avoid static pointers in AP_Param tables
     static RC_Channel *channels;
+
+    // the dummy channel can be used to avoid checking for nullptr on
+    // channels which should always be present.
+    static RC_Channel dummy;
 
     bool has_new_overrides;
 
