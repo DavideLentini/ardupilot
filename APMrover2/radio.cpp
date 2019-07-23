@@ -10,10 +10,20 @@ void Rover::set_control_channels(void)
     channel_throttle = rc().channel(rcmap.throttle()-1);
     channel_lateral  = rc().channel(rcmap.yaw()-1);
 
+    if (channel_steer == nullptr) {
+        channel_steer = rc().dummy_channel();
+    }
+    if (channel_throttle == nullptr) {
+        channel_throttle = rc().dummy_channel();
+    }
+    if (channel_lateral == nullptr) {
+        channel_lateral = rc().dummy_channel();
+    }
+
     // set rc channel ranges
     channel_steer->set_angle(SERVO_MAX);
     channel_throttle->set_angle(100);
-    if (channel_lateral != nullptr) {
+    if (!channel_lateral->is_dummy()) {
         channel_lateral->set_angle(100);
     }
 

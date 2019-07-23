@@ -135,7 +135,7 @@ void Mode::get_pilot_desired_steering_and_speed(float &steering_out, float &spee
 void Mode::get_pilot_desired_lateral(float &lateral_out)
 {
     // no RC input means no lateral input
-    if ((rover.failsafe.bits & FAILSAFE_EVENT_THROTTLE) || (rover.channel_lateral == nullptr)) {
+    if ((rover.failsafe.bits & FAILSAFE_EVENT_THROTTLE) || (rover.channel_lateral->is_dummy())) {
         lateral_out = 0;
         return;
     }
