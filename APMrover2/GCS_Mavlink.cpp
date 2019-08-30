@@ -605,6 +605,29 @@ MAV_RESULT GCS_MAVLINK_Rover::handle_command_int_packet(const mavlink_command_in
         }
         return MAV_RESULT_ACCEPTED;
 
+    case MAV_CMD_MISSION_START:
+        if (rover.set_mode(rover.mode_auto, ModeReason::GCS_COMMAND)) {
+            return MAV_RESULT_ACCEPTED;
+        }
+        return MAV_RESULT_FAILED;
+
+    case MAV_CMD_DO_MOTOR_TEST:
+        // param1 : motor sequence number (a number from 1 to max number of motors on the vehicle)
+        // param2 : throttle type (0=throttle percentage, 1=PWM, 2=pilot throttle channel pass-through. See MOTOR_TEST_THROTTLE_TYPE enum)
+        // param3 : throttle (range depends upon param2)
+        // param4 : timeout (in seconds)
+        return rover.mavlink_motor_test_start(*this,
+                                              (AP_MotorsUGV::motor_test_order)packet.param1,
+                                              static_cast<uint8_t>(packet.param2),
+                                              static_cast<int16_t>(packet.param3),
+                                              packet.param4);
+
+    case MAV_CMD_NAV_RETURN_TO_LAUNCH: {
+        if (rover.set_mode(rover.mode_rtl, ModeReason::GCS_COMMAND)) {
+            return MAV_RESULT_ACCEPTED;
+        }
+        return MAV_RESULT_FAILED;
+
     case MAV_CMD_DO_SET_REVERSE:
         // param1 : Direction (0=Forward, 1=Reverse)
         rover.control_mode->set_reversed(is_equal(packet.param1,1.0f));
@@ -619,30 +642,15 @@ MAV_RESULT GCS_MAVLINK_Rover::handle_command_long_packet(const mavlink_command_l
 {
     switch (packet.command) {
 
-    case MAV_CMD_NAV_RETURN_TO_LAUNCH:
-        if (rover.set_mode(rover.mode_rtl, ModeReason::GCS_COMMAND)) {
-            return MAV_RESULT_ACCEPTED;
-        }
-        return MAV_RESULT_FAILED;
-
-    case MAV_CMD_MISSION_START:
-        if (rover.set_mode(rover.mode_auto, ModeReason::GCS_COMMAND)) {
-            return MAV_RESULT_ACCEPTED;
-        }
-        return MAV_RESULT_FAILED;
-
     case MAV_CMD_DO_CHANGE_SPEED:
-        // param1 : unused
-        // param2 : new speed in m/s
-        if (!rover.control_mode->set_desired_speed(packet.param2)) {
-            return MAV_RESULT_FAILED;
-        }
-        return MAV_RESULT_ACCEPTED;
-
+    case MAV_CMD_DO_MOTOR_TEST:
     case MAV_CMD_DO_SET_REVERSE:
-        // param1 : Direction (0=Forward, 1=Reverse)
-        rover.control_mode->set_reversed(is_equal(packet.param1,1.0f));
-        return MAV_RESULT_ACCEPTED;
+    case MAV_CMD_MISSION_START:
+    case MAV_CMD_NAV_RETURN_TO_LAUNCH: {
+        mavlink_command_int_t command_int;
+        convert_COMMAND_LONG_to_COMMAND_INT(packet, command_int);
+        return handle_command_int_packet(command_int);
+    }
 
     case MAV_CMD_NAV_SET_YAW_SPEED:
     {
@@ -665,17 +673,6 @@ MAV_RESULT GCS_MAVLINK_Rover::handle_command_long_packet(const mavlink_command_l
         }
         return MAV_RESULT_ACCEPTED;
     }
-
-    case MAV_CMD_DO_MOTOR_TEST:
-        // param1 : motor sequence number (a number from 1 to max number of motors on the vehicle)
-        // param2 : throttle type (0=throttle percentage, 1=PWM, 2=pilot throttle channel pass-through. See MOTOR_TEST_THROTTLE_TYPE enum)
-        // param3 : throttle (range depends upon param2)
-        // param4 : timeout (in seconds)
-        return rover.mavlink_motor_test_start(*this,
-                                              (AP_MotorsUGV::motor_test_order)packet.param1,
-                                              static_cast<uint8_t>(packet.param2),
-                                              static_cast<int16_t>(packet.param3),
-                                              packet.param4);
 
     default:
         return GCS_MAVLINK::handle_command_long_packet(packet);
