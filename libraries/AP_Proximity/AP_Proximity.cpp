@@ -19,6 +19,7 @@
 #include "AP_Proximity_TeraRangerTower.h"
 #include "AP_Proximity_TeraRangerTowerEvo.h"
 #include "AP_Proximity_RangeFinder.h"
+#include "AP_Proximity_EchoLogger_RS900.h"
 #include "AP_Proximity_MAV.h"
 #include "AP_Proximity_LightWareSF40C.h"
 #include "AP_Proximity_SITL.h"
@@ -323,6 +324,13 @@ void AP_Proximity::detect_instance(uint8_t instance)
         if (AP_Proximity_LightWareSF40C::detect()) {
             state[instance].instance = instance;
             drivers[instance] = new AP_Proximity_LightWareSF40C(*this, state[instance]);
+            return;
+        }
+        break;
+    case Type::EchoLogger_RS900:
+        if (AP_Proximity_EchoLogger_RS900::detect()) {
+            state[instance].instance = instance;
+            drivers[instance] = new AP_Proximity_EchoLogger_RS900(*this, state[instance]);
             return;
         }
         break;
