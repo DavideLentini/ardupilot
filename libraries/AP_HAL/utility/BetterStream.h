@@ -43,6 +43,19 @@ public:
      * -1 if nothing available, uint8_t value otherwise. */
     virtual int16_t read() = 0;
 
+    // returns -1 on error, number of bytes read otherwise
+    virtual ssize_t read(uint8_t *buffer, uint16_t count) {
+        uint16_t offset = 0;
+        while (count--) {
+            const int16_t x = read();
+            if (x == -1) {
+                return offset;
+            }
+            buffer[offset++] = (uint8_t)x;
+        }
+        return offset;
+    }
+
     /* NB txspace was traditionally a member of BetterStream in the
      * FastSerial library. As far as concerns go, it belongs with available() */
     virtual uint32_t txspace() = 0;
