@@ -315,6 +315,12 @@ int SITL_State::sim_fd(const char *name, const char *arg)
     //     }
     //     frsky_sport = new SITL::Frsky_SPortPassthrough();
     //     return frsky_sportpassthrough->fd();
+    } else if (streq(name, "echologger_rs900")) {
+        if (echologger_rs900 != nullptr) {
+            AP_HAL::panic("Only one echologger_rs900 at a time");
+        }
+        echologger_rs900 = new SITL::EchoLogger_RS900();
+        return echologger_rs900->fd();
     }
 
     AP_HAL::panic("unknown simulated device: %s", name);
@@ -391,6 +397,11 @@ int SITL_State::sim_fd_write(const char *name)
             AP_HAL::panic("No frsky-d created");
         }
         return frsky_d->write_fd();
+    } else if (streq(name, "echologger_rs900")) {
+        if (echologger_rs900 == nullptr) {
+            AP_HAL::panic("No echologger_rs900 created");
+        }
+        return echologger_rs900->write_fd();
     }
     AP_HAL::panic("unknown simulated device: %s", name);
 }
@@ -563,6 +574,13 @@ void SITL_State::_fdm_input_local(void)
     }
     if (nmea != nullptr) {
         nmea->update(sitl_model->get_range());
+    }
+    if (echologger_rs900 != nullptr) {
+        Quaternion attitude;
+        sitl_model->get_attitude(attitude);
+        echologger_rs900->update(sitl_model->get_location(),
+                                 sitl_model->get_position(),
+                                 attitude);
     }
 
     if (frsky_d != nullptr) {
