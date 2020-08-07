@@ -358,6 +358,9 @@ SITL::SerialDevice *SITL_State::create_serial_sim(const char *name, const char *
     } else if (streq(name, "ie24")) {
         sitl_model->set_ie24(&_sitl->ie24_sim);
         return &_sitl->ie24_sim;
+    } else if (streq(name, "ecoefi")) {
+        sitl_model->set_ecoefi(&_sitl->ecoefi_sim);
+        return _sitl->ecoefi_sim;
     } else if (streq(name, "gyus42v2")) {
         if (gyus42v2 != nullptr) {
             AP_HAL::panic("Only one gyus42v2 at a time");
