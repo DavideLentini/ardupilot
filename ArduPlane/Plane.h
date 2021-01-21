@@ -75,6 +75,7 @@
 #include <AP_OSD/AP_OSD.h>
 
 #include <AP_Rally/AP_Rally.h>
+#include <AP_AS5600_AOA/AS5600_AOA.h> //Magnetic Encoder library, line added by Cole
 
 #include <AP_OpticalFlow/AP_OpticalFlow.h>     // Optical Flow library
 #include <AP_Parachute/AP_Parachute.h>
@@ -89,6 +90,8 @@
 #include "GCS_Plane.h"
 #include "quadplane.h"
 #include "tuning.h"
+
+
 
 // Configuration
 #include "config.h"
@@ -195,6 +198,8 @@ private:
     AP_Vehicle::FixedWing::Rangefinder_State rangefinder_state;
 
     AP_RPM rpm_sensor;
+
+    AS_5600 aoa_sensor;                                             //This is code added by Cole
 
     AP_TECS TECS_controller{ahrs, aparm, landing};
     AP_L1_Control L1_controller{ahrs, &TECS_controller};
@@ -1042,6 +1047,10 @@ private:
 
     // sensors.cpp
     void read_rangefinder(void);
+
+    void check_aoa(void);                   //This line added by Cole
+    void read_aoa(void);                    //This line added by Cole
+
 
     // system.cpp
     void init_ardupilot() override;

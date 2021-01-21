@@ -67,6 +67,8 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
     SCHED_TASK(update_compass,         10,    200,  39),
     SCHED_TASK(calc_airspeed_errors,   10,    100,  42),
     SCHED_TASK(update_alt,             10,    200,  45),
+    SCHED_TASK(read_aoa,               10,    200,  46),//This line added by Cole
+    SCHED_TASK(check_aoa,              10,    200,  47),//This line added by Cole
     SCHED_TASK(adjust_altitude_target, 10,    200,  48),
 #if ADVANCED_FAILSAFE == ENABLED
     SCHED_TASK(afs_fs_check,           10,    100,  51),
@@ -222,6 +224,32 @@ void Plane::update_compass(void)
 {
     compass.read();
 }
+
+
+/*
+ * Check if the AoA sensor is up and running               This function is code added by Cole
+ */
+
+void Plane::check_aoa(void){
+
+aoa_sensor.checkConnect();
+
+}
+
+
+/*
+ * Read and log Angle of Attack                    This function is code added by Cole
+ */
+
+void Plane::read_aoa(void){
+
+    aoa_sensor.getRawAngle();
+    //uint16_t angle = aoa_sensor.getRawAngle();
+
+    //AP::logger().Write("AoAR", "TimeUS, AoA", "QC", AP_HAL::micros64(), angle);
+
+}
+
 
 /*
   do 10Hz logging
