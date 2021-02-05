@@ -11,35 +11,9 @@
 
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+   Base class for RPLidar support
  */
-/*
-  Simulator for the RPLidarA2 proximity sensor
-
-./Tools/autotest/sim_vehicle.py --gdb --debug -v ArduCopter -A --uartF=sim:rplidara2 --speedup=1 -l 51.8752066,14.6487840,0,0 --map
-
-param set SERIAL5_PROTOCOL 11
-param set PRX_TYPE 5
-reboot
-
-arm throttle
-rc 3 1600
-
-# for avoidance:
-param set DISARM_DELAY 0
-param set AVOID_ENABLE 2 # use proximity sensor
-param set AVOID_MARGIN 2.00  # 2m
-param set AVOID_BEHAVE 0 # slide
-param set OA_DB_OUTPUT 3
-param set OA_TYPE 2
-reboot
-mode loiter
-script /tmp/post-locations.scr
-arm throttle
-rc 3 1600
-rc 3 1500
-rc 2 1450
-
-*/
 
 #pragma once
 
@@ -49,7 +23,7 @@ rc 2 1450
 
 namespace SITL {
 
-class PS_RPLidarA2 : public SerialProximitySensor {
+class PS_RPLidar : public SerialProximitySensor {
 public:
 
     uint32_t packet_for_location(const Location &location,
@@ -127,8 +101,9 @@ private:
     static const constexpr char *FIRMWARE_INFO = "R12345678901234567890123456789012345678901234567890123456789012";
     uint8_t _firmware_info_offset;
 
-    // this will be pure-virtual in a notional RPLidar base class:
-    uint8_t device_info_model() const { return 0x28; }
+    // methods for sub-classes to implement:
+    virtual uint8_t device_info_model() const = 0;
+    virtual uint8_t max_range() const = 0;
 };
 
 };
