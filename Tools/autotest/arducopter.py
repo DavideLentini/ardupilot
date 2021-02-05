@@ -6458,7 +6458,7 @@ class AutoTestCopter(AutoTest):
         ])
         return ret
 
-    def test_rplidar(self):
+    def test_rplidar(self, sim_device_name, expected_distances):
         '''plonks a Copter with a RPLidarA2 in the middle of a simulated field
         of posts and checks that the measurements are what we expect.'''
         self.set_parameters({
@@ -6466,20 +6466,9 @@ class AutoTestCopter(AutoTest):
             "PRX_TYPE": 5,
         })
         self.customise_SITL_commandline([
-            "--uartF=sim:rplidara2:",
+            "--uartF=sim:%s:" % sim_device_name,
             "--home", "51.8752066,14.6487840,0,0",  # SITL has "posts" here
         ])
-
-        expected_distances = {
-            mavutil.mavlink.MAV_SENSOR_ROTATION_NONE: 276,
-            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_45: 256,
-            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_90: 1130,
-            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_135: 1286,
-            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_180: 626,
-            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_225: 971,
-            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_270: 762,
-            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_315: 792,
-        }
 
         self.wait_ready_to_arm()
 
@@ -6504,11 +6493,42 @@ class AutoTestCopter(AutoTest):
                                wanting_distances[m.orientation],
                                m.current_distance))
                 continue
+            self.progress("Correct distance for orient %u (want=%u got=%u)" %
+                          (m.orientation,
+                           wanting_distances[m.orientation],
+                           m.current_distance)
+            )
             del wanting_distances[m.orientation]
-            self.progress("Got correct distance for orient %u" %
-                          (m.orientation))
             if len(wanting_distances.items()) == 0:
                 break
+
+    def test_rplidar_a2(self):
+        expected_distances = {
+            mavutil.mavlink.MAV_SENSOR_ROTATION_NONE: 276,
+            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_45: 256,
+            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_90: 1130,
+            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_135: 1286,
+            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_180: 626,
+            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_225: 971,
+            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_270: 762,
+            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_315: 792,
+        }
+
+        self.test_rplidar("rplidara2", expected_distances)
+
+    def test_rplidar_a1(self):
+        expected_distances = {
+            mavutil.mavlink.MAV_SENSOR_ROTATION_NONE: 276,
+            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_45: 256,
+            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_90: 800,
+            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_135: 800,
+            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_180: 626,
+            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_225: 800,
+            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_270: 762,
+            mavutil.mavlink.MAV_SENSOR_ROTATION_YAW_315: 792,
+        }
+
+        self.test_rplidar("rplidara1", expected_distances)
 
     def tests2b(self): #this block currently around 9.5mins here
         '''return list of all tests'''
@@ -6552,9 +6572,13 @@ class AutoTestCopter(AutoTest):
                  "Check EKF Source Prearms work",
                  self.test_ekf_source),
 
-            Test("RPLidar",
-                 "Check RPLidar works against simulation",
-                 self.test_rplidar),
+            Test("RPLidarA2",
+                 "Check RPLidarA2 works against simulation",
+                 self.test_rplidar_a2),
+
+            Test("RPLidarA1",
+                 "Check RPLidarA1 works against simulation",
+                 self.test_rplidar_a1),
 
             Test("DataFlash",
                  "Test DataFlash Block backend",
