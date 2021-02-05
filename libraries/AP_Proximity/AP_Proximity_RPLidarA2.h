@@ -135,6 +135,7 @@ private:
 
     enum class Model {
         UNKNOWN,
+        A1,
         A2,
     } model = Model::UNKNOWN;
 
