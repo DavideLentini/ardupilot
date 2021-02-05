@@ -352,6 +352,12 @@ int SITL_State::sim_fd(const char *name, const char *arg)
         }
         rplidara2 = new SITL::PS_RPLidarA2();
         return rplidara2->fd();
+    } else if (streq(name, "rplidara1")) {
+        if (rplidara1 != nullptr) {
+            AP_HAL::panic("Only one rplidara1 at a time");
+        }
+        rplidara1 = new SITL::PS_RPLidarA1();
+        return rplidara1->fd();
     } else if (streq(name, "terarangertower")) {
         if (terarangertower != nullptr) {
             AP_HAL::panic("Only one terarangertower at a time");
@@ -478,6 +484,11 @@ int SITL_State::sim_fd_write(const char *name)
             AP_HAL::panic("No rplidara2 created");
         }
         return rplidara2->write_fd();
+    } else if (streq(name, "rplidara1")) {
+        if (rplidara1 == nullptr) {
+            AP_HAL::panic("No rplidara1 created");
+        }
+        return rplidara1->write_fd();
     } else if (streq(name, "terarangertower")) {
         if (terarangertower == nullptr) {
             AP_HAL::panic("No terarangertower created");
@@ -704,6 +715,10 @@ void SITL_State::_fdm_input_local(void)
 
     if (rplidara2 != nullptr) {
         rplidara2->update(sitl_model->get_location());
+    }
+
+    if (rplidara1 != nullptr) {
+        rplidara1->update(sitl_model->get_location());
     }
 
     if (terarangertower != nullptr) {
