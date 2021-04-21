@@ -990,6 +990,7 @@ ap_message GCS_MAVLINK::mavlink_id_to_ap_message_id(const uint32_t mavlink_id) c
 #if HAL_ADSB_ENABLED
         { MAVLINK_MSG_ID_UAVIONIX_ADSB_OUT_STATUS, MSG_UAVIONIX_ADSB_OUT_STATUS},
 #endif
+        { MAVLINK_MSG_ID_COMPONENT_INFORMATION, MSG_COMPONENT_INFORMATION},
             };
 
     for (uint8_t i=0; i<ARRAY_SIZE(map); i++) {
@@ -5405,6 +5406,20 @@ void GCS_MAVLINK::send_received_message_deprecation_warning(const char * message
     last_deprecation_message = message;
 
     send_text(MAV_SEVERITY_WARNING, "Received message (%s) is deprecated", message);
+
+void GCS_MAVLINK::send_component_information() const
+{
+    const char *general_metadata_url = "mftp:/@SYS/general_metadata.json";
+    const uint32_t general_metadata_checksum = 133761337;
+
+    mavlink_msg_component_information_send(
+        chan,
+        AP_HAL::millis(),
+        general_metadata_checksum,
+        general_metadata_url,
+        0,  // -1?
+        ""
+        );
 }
 
 bool GCS_MAVLINK::try_send_message(const enum ap_message id)
@@ -5764,6 +5779,10 @@ bool GCS_MAVLINK::try_send_message(const enum ap_message id)
         break;
     }
 
+    case MSG_COMPONENT_INFORMATION:
+        CHECK_PAYLOAD_SIZE(COMPONENT_INFORMATION);
+        send_component_information();
+        break;
 
     case MSG_UAVIONIX_ADSB_OUT_STATUS:
 #if HAL_ADSB_ENABLED
