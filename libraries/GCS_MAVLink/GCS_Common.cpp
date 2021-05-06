@@ -971,6 +971,7 @@ ap_message GCS_MAVLINK::mavlink_id_to_ap_message_id(const uint32_t mavlink_id) c
         { MAVLINK_MSG_ID_AOA_SSA,               MSG_AOA_SSA},
         { MAVLINK_MSG_ID_DEEPSTALL,             MSG_LANDING},
         { MAVLINK_MSG_ID_EXTENDED_SYS_STATE,    MSG_EXTENDED_SYS_STATE},
+        { MAVLINK_MSG_ID_MISSION_CHECKSUM,      MSG_MISSION_CHECKSUM},
         { MAVLINK_MSG_ID_AUTOPILOT_VERSION,     MSG_AUTOPILOT_VERSION},
 #if HAL_EFI_ENABLED
         { MAVLINK_MSG_ID_EFI_STATUS,            MSG_EFI_STATUS},
@@ -5011,6 +5012,23 @@ void GCS::try_send_queued_message_for_type(MAV_MISSION_TYPE type) const {
     prot->queued_request_send();
 }
 
+bool GCS_MAVLINK::try_send_mission_message_checksum()
+{
+    static const MAV_MISSION_TYPE to_send[] {
+        MAV_MISSION_TYPE_MISSION,
+        MAV_MISSION_TYPE_RALLY,
+        MAV_MISSION_TYPE_FENCE,
+    };
+    for (auto type : to_send) {
+        MissionItemProtocol *prot = gcs().get_prot_for_mission_type(type);
+        if (prot == nullptr) {
+            continue;
+        }
+        prot->send_mission_checksum_message(*this);
+    }
+    return true;
+}
+
 bool GCS_MAVLINK::try_send_mission_message(const enum ap_message id)
 {
     AP_Mission *mission = AP::mission();
@@ -5049,6 +5067,10 @@ bool GCS_MAVLINK::try_send_mission_message(const enum ap_message id)
         ret = true;
         break;
 #endif
+    case MSG_MISSION_CHECKSUM:
+        // size checking done within method
+        ret = try_send_mission_message_checksum();
+        break;
     default:
         ret = true;
         break;
@@ -5451,6 +5473,7 @@ bool GCS_MAVLINK::try_send_message(const enum ap_message id)
     case MSG_NEXT_MISSION_REQUEST_WAYPOINTS:
     case MSG_NEXT_MISSION_REQUEST_RALLY:
     case MSG_NEXT_MISSION_REQUEST_FENCE:
+    case MSG_MISSION_CHECKSUM:
         ret = try_send_mission_message(id);
         break;
 

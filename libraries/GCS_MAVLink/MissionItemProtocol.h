@@ -64,6 +64,7 @@ public:
     // a method for GCS_MAVLINK to send warnings about received
     // MISSION_ITEM messages (we should be getting MISSION_ITEM_INT)
     void send_mission_item_warning();
+    bool send_mission_checksum_message(const GCS_MAVLINK &_link);
 
 protected:
 
@@ -138,6 +139,8 @@ private:
     // in a transfer.  Backends are expected to tidy themselves up in
     // this routine
     virtual void timeout() {};
+
+    virtual bool checksum_for_mission_checksum_message(uint32_t &checksum) = 0;
 
     bool mavlink2_requirement_met(const GCS_MAVLINK &_link, const mavlink_message_t &msg) const;
 };

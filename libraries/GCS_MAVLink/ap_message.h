@@ -68,6 +68,7 @@ enum ap_message : uint8_t {
     MSG_LANDING,
     MSG_ESC_TELEMETRY,
     MSG_ORIGIN,
+    MSG_MISSION_CHECKSUM,
     MSG_HOME,
     MSG_NAMED_FLOAT,
     MSG_EXTENDED_SYS_STATE,
