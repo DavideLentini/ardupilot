@@ -7347,7 +7347,7 @@ class AutoTestCopter(AutoTest):
         self.wait_disarmed()
         self.reboot_sitl()
 
-    def test_SMART_RTL(self):
+    def test_SMART_RTL_pathfollow(self):
         self.context_push()
         ex = None
         try:
@@ -7662,6 +7662,22 @@ class AutoTestCopter(AutoTest):
             self.print_exception_caught(e)
             ex = e
 
+    def test_SMART_RTL_nopoints(self):
+        self.context_push()
+        ex = None
+        try:
+            self.change_mode('AUTO')
+            self.wait_ready_to_arm()
+            self.change_mode('ALT_HOLD')
+            self.change_mode('SMART_RTL')
+            self.change_mode('ALT_HOLD')
+            self.change_mode('SMART_RTL')
+
+        except Exception as e:
+            self.print_exception_caught(e)
+            ex = e
+            self.disarm_vehicle(force=True)
+
         self.context_pop()
 
         self.reboot_sitl()
@@ -7708,6 +7724,10 @@ class AutoTestCopter(AutoTest):
         self.arm_vehicle()
         self.disarm_vehicle()
         self.context_pop()
+
+    def test_SMART_RTL(self):
+        self.test_SMART_RTL_nopoints()
+        self.test_SMART_RTL_pathfollow()
 
     def PAUSE_CONTINUE(self):
         self.load_mission("copter_mission.txt", strict=False)
