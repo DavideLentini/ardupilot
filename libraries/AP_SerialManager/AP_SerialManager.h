@@ -201,6 +201,9 @@ public:
     // find_portnum - find port number (SERIALn index) for a protocol and instance, -1 for not found
     int8_t find_portnum(enum SerialProtocol protocol, uint8_t instance) const;
 
+    // returns a count of the number of instances of the specified protocol:
+    uint8_t protocol_instance_count(enum SerialProtocol protocol) const;
+
     // set_blocking_writes_all - sets block_writes on or off for all serial channels
     void set_blocking_writes_all(bool blocking);
 

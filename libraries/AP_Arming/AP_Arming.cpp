@@ -819,6 +819,12 @@ bool AP_Arming::rangefinder_checks(bool report)
         }
     }
 
+    if (check_enabled(ARMING_CHECK_PARAMETERS)) {
+        if (!check_frsky_params(report)) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -1245,6 +1251,32 @@ void AP_Arming::set_aux_auth_failed(uint8_t auth_id, const char* fail_msg)
         aux_auth_fail_msg_source = auth_id;
     }
 }
+
+bool AP_Arming::check_frsky_params(bool display_failure)
+{
+    const AP_SerialManager &serial_manager = AP::serialmanager();
+
+    const enum AP_SerialManager::SerialProtocol protocols[] {
+        AP_SerialManager::SerialProtocol_FrSky_D,
+        AP_SerialManager::SerialProtocol_FrSky_SPort,
+        AP_SerialManager::SerialProtocol_FrSky_SPort_Passthrough,
+    };
+
+    uint8_t count = 0;
+    if (use_external_data) {
+        count += 1;
+    }
+    for (auto protocol : protocols) {
+        count += serial_manager.protocol_instance_count(protocol);
+    }
+
+    if (count > 1) {
+        check_failed(ARMING_CHECK_PARAMETERS, display_failure, "Check FrSky parameters");
+    }
+
+    return true;
+}
+
 
 bool AP_Arming::aux_auth_checks(bool display_failure)
 {

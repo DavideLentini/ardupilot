@@ -726,6 +726,17 @@ bool AP_SerialManager::protocol_match(enum SerialProtocol protocol1, enum Serial
     return false;
 }
 
+uint8_t AP_SerialManager::protocol_instance_count(enum SerialProtocol protocol) const
+{
+    uint8_t ret = 0;
+    for(uint8_t i=0; i<SERIALMANAGER_NUM_PORTS; i++) {
+        if (protocol_match(protocol, (enum SerialProtocol)state[i].protocol.get())) {
+            ret++;
+        }
+    }
+    return ret;
+}
+
 // setup any special options
 void AP_SerialManager::set_options(uint16_t i)
 {

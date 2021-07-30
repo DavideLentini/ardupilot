@@ -149,6 +149,8 @@ protected:
 
     bool airspeed_checks(bool report);
 
+    bool check_frsky_params(bool report);
+
     bool logging_checks(bool report);
 
     virtual bool ins_checks(bool report);
