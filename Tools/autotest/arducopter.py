@@ -2873,6 +2873,32 @@ class AutoTestCopter(AutoTest):
         if not self.current_onboard_log_contains_message("XKFD"):
             raise NotAchievedException("Did not find expected XKFD message")
 
+    def fly_mission_twice(self):
+        '''fly a mission twice in a row without changing modes in between.
+        Seeks to show bugs in mission state machine'''
+
+        loc = self.poll_home_position()
+        alt = 20
+        loc.alt = alt
+        items = [
+            (mavutil.mavlink.MAV_CMD_NAV_TAKEOFF, 0, 0, alt),
+            (mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 20, 0, alt),
+        ]
+
+        items.append((mavutil.mavlink.MAV_CMD_NAV_RETURN_TO_LAUNCH, 0, 0, 0))
+
+        self.upload_simple_relhome_mission(items)
+
+        num_wp = self.get_mission_count()
+        self.set_parameter("AUTO_OPTIONS", 3)
+        self.change_mode('AUTO')
+        self.wait_ready_to_arm()
+        for i in 1, 2:
+            self.progress("run %u" % i)
+            self.arm_vehicle()
+            self.wait_waypoint(num_wp-1, num_wp-1)
+            self.wait_disarmed()
+
     def fly_gps_vicon_switching(self):
         """Fly GPS and Vicon switching test"""
         self.customise_SITL_commandline(["--uartF=sim:vicon:"])
@@ -9194,6 +9220,11 @@ class AutoTestCopter(AutoTest):
             Test("MultipleGPS",
                  "Test multi-GPS behaviour",
                  self.MultipleGPS),
+
+            # tries to catch bugs in mission state machine:
+            Test("FlyMissionTwice",
+                 "Fly mission twice in a row",
+                 self.fly_mission_twice),
 
             Test("LogUpload",
                  "Log upload",
