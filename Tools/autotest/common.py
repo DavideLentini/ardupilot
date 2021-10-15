@@ -3521,14 +3521,14 @@ class AutoTest(ABC):
         self.assert_message_field_values(m, fieldvalues, verbose=verbose, epsilon=epsilon)
         return m
 
-    def wait_message_field_values(self, message, fieldvalues, timeout=10, epsilon=None):
+    def wait_message_field_values(self, message, fieldvalues, timeout=10, epsilon=None, verbose=True, very_verbose=False):
         tstart = self.get_sim_time_cached()
         while True:
             if self.get_sim_time_cached() - tstart > timeout:
                 raise NotAchievedException("Field never reached values")
-            m = self.assert_receive_message(message)
-            if self.message_has_field_values(m, fieldvalues, epsilon=epsilon):
-                break
+            m = self.assert_receive_message(message, verbose=verbose, very_verbose=very_verbose)
+            if self.message_has_field_values(m, fieldvalues, epsilon=epsilon, verbose=verbose):
+                return m
 
     def onboard_logging_not_log_disarmed(self):
         self.start_subtest("Test LOG_DISARMED-is-false behaviour")
