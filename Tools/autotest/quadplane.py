@@ -935,6 +935,65 @@ class AutoTestQuadPlane(AutoTest):
         self.set_message_rate_hz(mavutil.mavlink.MAVLINK_MSG_ID_EXTENDED_SYS_STATE, -1)
         self.disarm_vehicle()
 
+    def RCDisableAirspeedUse(self):
+        self.set_parameter("RC9_OPTION", 106)
+        self.delay_sim_time(5)
+        self.set_rc(9, 1000)
+        self.wait_sensor_state(
+            mavutil.mavlink.MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE,
+            True,
+            True,
+            True)
+        self.set_rc(9, 2000)
+        self.wait_sensor_state(
+            mavutil.mavlink.MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE,
+            True,
+            False,
+            True)
+        self.set_rc(9, 1000)
+        self.wait_sensor_state(
+            mavutil.mavlink.MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE,
+            True,
+            True,
+            True)
+
+        self.context_push()
+
+        ex = None
+        try:
+            self.progress("Disabling airspeed sensor")
+            self.set_rc(9, 2000)
+            self.set_parameters({
+                "COMPASS_ENABLE": 0,
+                "EK2_ENABLE": 0,
+                "AHRS_EKF_TYPE": 3,
+                "COMPASS_USE": 0,
+                "COMPASS_USE2": 0,
+                "COMPASS_USE3": 0,
+                "ARMING_CHECK": 589818,  # from a logfile, disables compass
+            })
+
+            self.reboot_sitl()
+
+            self.wait_prearm_sys_status_healthy(timeout=120)
+            self.change_mode('QLOITER')
+            self.arm_vehicle()
+            self.set_rc(3, 2000)
+            self.wait_altitude(10, 30, relative=True)
+            self.change_mode('FBWA')
+            self.wait_statustext('Transition done')
+
+        except Exception as e:
+            self.print_exception_caught(e)
+            ex = e
+
+        self.disarm_vehicle(force=True)
+        self.context_pop()
+        self.reboot_sitl()
+
+        if ex is not None:
+            raise ex
+
     def tests(self):
         '''return list of all tests'''
 
@@ -998,6 +1057,10 @@ class AutoTestQuadPlane(AutoTest):
             ("BootInAUTO",
              "Test behaviour when booting in auto",
              self.BootInAUTO),
+
+            ("RCDisableAirspeedUse",
+             "Test RC DisableAirspeedUse option",
+             self.RCDisableAirspeedUse),
 
             ("LogUpload",
              "Log upload",
