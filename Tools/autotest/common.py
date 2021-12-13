@@ -10868,6 +10868,26 @@ switch value'''
             self.progress("Correct value %.4f for %s error %.2f%%" %
                           (v, pname, error_pct))
 
+    def wait_for_alt(self, alt_min=30, timeout=30, max_err=5):
+        """Wait for minimum altitude to be reached."""
+        self.wait_altitude(alt_min - 1,
+                           (alt_min + max_err),
+                           relative=True,
+                           timeout=timeout)
+
+    def user_takeoff(self, alt_min=30, timeout=30, max_err=5):
+        '''takeoff using mavlink takeoff command'''
+        self.run_cmd(mavutil.mavlink.MAV_CMD_NAV_TAKEOFF,
+                     0, # param1
+                     0, # param2
+                     0, # param3
+                     0, # param4
+                     0, # param5
+                     0, # param6
+                     alt_min # param7
+                     )
+        self.wait_for_alt(alt_min, timeout=timeout, max_err=max_err)
+
     def ahrstrim_attitude_correctness(self):
         self.wait_ready_to_arm()
         HOME = self.sitl_start_location()
