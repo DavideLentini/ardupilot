@@ -7170,6 +7170,7 @@ Also, ignores heartbeats not from our target system'''
         ex = None
         try:
             self.check_rc_defaults()
+            self.set_current_waypoint(0)
             self.change_mode(self.default_mode())
             # ArduPilot can still move the current waypoint from 0,
             # even if we are not in AUTO mode, so cehck_afterwards=False:
