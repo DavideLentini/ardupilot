@@ -47,6 +47,7 @@
 #include <AP_Frsky_Telem/AP_Frsky_Parameters.h>
 #include <AP_ExternalAHRS/AP_ExternalAHRS.h>
 #include <AP_VideoTX/AP_SmartAudio.h>
+#include <PB_WateringSystem/PB_WateringSystem.h>
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
 #include <SITL/SITL.h>
 #endif
@@ -326,6 +327,10 @@ protected:
 #endif
     AP_VideoTX vtx;
     AP_SerialManager serial_manager;
+
+#if HAL_WATERINGSYSTEM_ENABLED
+    PB_WateringSystem wateringsystem;
+#endif
 
     AP_Relay relay;
 

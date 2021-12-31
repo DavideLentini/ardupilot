@@ -204,6 +204,10 @@ void AP_Vehicle::setup()
     efi.init();
 #endif
 
+#if HAL_WATERINGSYSTEM_ENABLED
+    wateringsystem.init();
+#endif
+
     gcs().send_text(MAV_SEVERITY_INFO, "ArduPilot Ready");
 }
 
@@ -299,6 +303,10 @@ const AP_Scheduler::Task AP_Vehicle::scheduler_tasks[] = {
     SCHED_TASK(accel_cal_update,      10,    100, 245),
 #if HAL_EFI_ENABLED
     SCHED_TASK_CLASS(AP_EFI,       &vehicle.efi,            update,                   10, 200, 250),
+#endif
+
+#if HAL_WATERINGSYSTEM_ENABLED
+    SCHED_TASK_CLASS(PB_WateringSystem,       &vehicle.wateringsystem,            update,                   LOOP_RATE, 200, 250),
 #endif
 };
 
