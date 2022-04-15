@@ -883,20 +883,20 @@ void NavEKF3_core::readRngBcnData()
     }
 
     // get the number of beacons in use
-    N_beacons = MIN(beacon->count(), ARRAY_SIZE(lastTimeRngBcn_ms));
+    rngBcn.N = MIN(beacon->count(), ARRAY_SIZE(lastTimeRngBcn_ms));
 
     // search through all the beacons for new data and if we find it stop searching and push the data into the observation buffer
     bool newDataPushed = false;
     uint8_t numRngBcnsChecked = 0;
     // start the search one index up from where we left it last time
-    uint8_t index = lastRngBcnChecked;
-    while (!newDataPushed && (numRngBcnsChecked < N_beacons)) {
+    uint8_t index = rngBcn.lastChecked;
+    while (!newDataPushed && (numRngBcnsChecked < rngBcn.N)) {
         // track the number of beacons checked
         numRngBcnsChecked++;
 
         // move to next beacon, wrap index if necessary
         index++;
-        if (index >= N_beacons) {
+        if (index >= rngBcn.N) {
             index = 0;
         }
 
@@ -925,7 +925,7 @@ void NavEKF3_core::readRngBcnData()
             newDataPushed = true;
 
             // update the last checked index
-            lastRngBcnChecked = index;
+            rngBcn.lastChecked = index;
 
             // Save data into the buffer to be fused when the fusion time horizon catches up with it
             storedRangeBeacon.push(rngBcnDataNew);
@@ -936,18 +936,18 @@ void NavEKF3_core::readRngBcnData()
     Vector3f bp;
     float bperr;
     if (beacon->get_vehicle_position_ned(bp, bperr)) {
-        rngBcnLast3DmeasTime_ms = imuSampleTime_ms;
+        rngBcn.last3DmeasTime_ms = imuSampleTime_ms;
     }
-    beaconVehiclePosNED = bp.toftype();
-    beaconVehiclePosErr = bperr;
+    rngBcn.vehiclePosNED = bp.toftype();
+    rngBcn.vehiclePosErr = bperr;
 
     // Check if the range beacon data can be used to align the vehicle position
-    if ((imuSampleTime_ms - rngBcnLast3DmeasTime_ms < 250) && (beaconVehiclePosErr < 1.0f) && rngBcnAlignmentCompleted) {
+    if ((imuSampleTime_ms - rngBcn.last3DmeasTime_ms < 250) && (rngBcn.vehiclePosErr < 1.0f) && rngBcn.alignmentCompleted) {
         // check for consistency between the position reported by the beacon and the position from the 3-State alignment filter
-        const ftype posDiffSq = sq(receiverPos.x - beaconVehiclePosNED.x) + sq(receiverPos.y - beaconVehiclePosNED.y);
-        const ftype posDiffVar = sq(beaconVehiclePosErr) + receiverPosCov[0][0] + receiverPosCov[1][1];
+        const ftype posDiffSq = sq(rngBcn.receiverPos.x - rngBcn.vehiclePosNED.x) + sq(receiverPos.y - beaconVehiclePosNED.y);
+        const ftype posDiffVar = sq(rngBcn.vehiclePosErr) + rngBcn.receiverPosCov[0][0] + receiverPosCov[1][1];
         if (posDiffSq < 9.0f * posDiffVar) {
-            rngBcnGoodToAlign = true;
+            rngBcn.goodToAlign = true;
             // Set the EKF origin and magnetic field declination if not previously set
             if (!validOrigin && (PV_AidingMode != AID_ABSOLUTE)) {
                 // get origin from beacon system
@@ -960,23 +960,23 @@ void NavEKF3_core::readRngBcnData()
                     alignMagStateDeclination();
 
                     // Set the uncertainty of the origin height
-                    ekfOriginHgtVar = sq(beaconVehiclePosErr);
+                    ekfOriginHgtVar = sq(rngBcn.vehiclePosErr);
                 }
             }
         } else {
-            rngBcnGoodToAlign = false;
+            rngBcn.goodToAlign = false;
         }
     } else {
-        rngBcnGoodToAlign = false;
+        rngBcn.goodToAlign = false;
     }
 
     // Check the buffer for measurements that have been overtaken by the fusion time horizon and need to be fused
-    rngBcnDataToFuse = storedRangeBeacon.recall(rngBcnDataDelayed, imuDataDelayed.time_ms);
+    rngBcn.dataToFuse = storedRangeBeacon.recall(rngBcn.dataDelayed, imuDataDelayed.time_ms);
 
     // Correct the range beacon earth frame origin for estimated offset relative to the EKF earth frame origin
-    if (rngBcnDataToFuse) {
-        rngBcnDataDelayed.beacon_posNED.x += bcnPosOffsetNED.x;
-        rngBcnDataDelayed.beacon_posNED.y += bcnPosOffsetNED.y;
+    if (rngBcn.dataToFuse) {
+        rngBcn.dataDelayed.beacon_posNED.x += rngBcn.posOffsetNED.x;
+        rngBcn.dataDelayed.beacon_posNED.y += rngBcn.posOffsetNED.y;
     }
 
 }

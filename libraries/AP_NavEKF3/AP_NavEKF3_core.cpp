@@ -797,7 +797,7 @@ void NavEKF3_core::UpdateStrapdownEquationsNED()
 #if EK3_FEATURE_BEACON_FUSION
     // If main filter velocity states are valid, update the range beacon receiver position states
     if (filterStatus.flags.horiz_vel) {
-        receiverPos += (stateStruct.velocity + lastVelocity) * (imuDataDelayed.delVelDT*0.5f);
+        rngBcn.receiverPos += (stateStruct.velocity + lastVelocity) * (imuDataDelayed.delVelDT*0.5f);
     }
 #endif
 }

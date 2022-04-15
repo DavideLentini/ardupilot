@@ -1298,8 +1298,8 @@ private:
         uint32_t last3DmeasTime_ms;   // last time the beacon system returned a 3D fix (msec)
         bool goodToAlign;             // true when the range beacon systems 3D fix can be used to align the filter
         uint8_t lastChecked;          // index of the last range beacon checked for data
-        Vector3F receiverPos;               // receiver NED position (m) - alignment 3 state filter
-        ftype receiverPosCov[3][3];         // Receiver position covariance (m^2) - alignment 3 state filter (
+        Vector3F rngBcn.receiverPos;               // receiver NED position (m) - alignment 3 state filter
+        ftype rngBcn.receiverPosCov[3][3];         // Receiver position covariance (m^2) - alignment 3 state filter (
         bool alignmentStarted;        // True when the initial position alignment using range measurements has started
         bool alignmentCompleted;      // True when the initial position alignment using range measurements has finished
         uint8_t lastIndex;            // Range beacon index last read -  used during initialisation of the 3-state filter
@@ -1313,18 +1313,18 @@ private:
 
         ftype PosDownOffsetMax;          // Vertical position offset of the beacon constellation origin relative to the EKF origin (m)
         ftype PosOffsetMaxVar;           // Variance of the PosDownOffsetMax state (m)
-        ftype maxOffsetStateChangeFilt;     // Filtered magnitude of the change in PosOffsetHigh
+        ftype rngBcn.maxOffsetStateChangeFilt;     // Filtered magnitude of the change in PosOffsetHigh
 
         ftype PosDownOffsetMin;          // Vertical position offset of the beacon constellation origin relative to the EKF origin (m)
         ftype PosOffsetMinVar;           // Variance of the PosDownOffsetMin state (m)
-        ftype minOffsetStateChangeFilt;     // Filtered magnitude of the change in PosOffsetLow
+        ftype rngBcn.minOffsetStateChangeFilt;     // Filtered magnitude of the change in PosOffsetLow
 
         Vector3F PosOffsetNED;           // NED position of the beacon origin in earth frame (m)
         bool OriginEstInit;              // True when the beacon origin has been initialised
     } rngBcn;
 
     // Range Beacon Fusion Debug Reporting
-    uint8_t rngBcnFuseDataReportIndex;// index of range beacon fusion data last reported
+    uint8_t rngBcn.fuseDataReportIndex;// index of range beacon fusion data last reported
     struct rngBcnFusionReport_t {
         ftype rng;          // measured range to beacon (m)
         ftype innov;        // range innovation (m)
