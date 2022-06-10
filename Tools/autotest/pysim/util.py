@@ -473,13 +473,11 @@ def start_SITL(binary,
         rest = cmd[1:]
         child = pexpect.spawn(first, rest, logfile=sys.stdout, encoding=ENCODING, timeout=5)
         pexpect_autoclose(child)
-    # give time for parameters to properly setup
-    time.sleep(3)
     if gdb or lldb:
         # if we run GDB we do so in an xterm.  "Waiting for
         # connection" is never going to appear on xterm's output.
-        # ... so let's give it another magic second.
-        time.sleep(1)
+        # ... so just sleep for 4 seconds and hope for the best
+        time.sleep(4)
         # TODO: have a SITL-compiled ardupilot able to have its
         # console on an output fd.
     else:
