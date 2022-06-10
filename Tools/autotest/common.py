@@ -6828,8 +6828,9 @@ Also, ignores heartbeats not from our target system'''
         try:
             self.wait_heartbeat()
             ardupilot_alive = True
-        except Exception:
+        except Exception as ex_heartbeat:
             # process is dead
+            self.print_exception_caught(ex_heartbeat)
             self.progress("No heartbeat after test", send_statustext=False)
             if self.sitl.isalive():
                 self.progress("pexpect says it is alive")
