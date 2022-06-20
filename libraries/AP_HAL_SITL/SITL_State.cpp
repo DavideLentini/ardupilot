@@ -238,7 +238,7 @@ SITL::SerialDevice *SITL_State::create_serial_sim(const char *name, const char *
         return benewake_tfmini;
     } else if (streq(name, "teraranger_serial")) {
         if (teraranger_serial != nullptr) {
-            AP_HAL::panic("Only one TeraRanger Serial at a time");
+            AP_HAL::panic("Only one teraranger_serial at a time");
         }
         teraranger_serial = new SITL::RF_TeraRanger_Serial();
         return teraranger_serial;
