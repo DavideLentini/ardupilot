@@ -573,6 +573,9 @@ void SITL_State::_fdm_input_local(void)
     if (benewake_tfmini != nullptr) {
         benewake_tfmini->update(sitl_model->rangefinder_range());
     }
+    if (terarange_serial != nullptr) {
+        terarange_serial->update(sitl_model->rangefinder_range());
+    }
     if (lightwareserial != nullptr) {
         lightwareserial->update(sitl_model->rangefinder_range());
     }
