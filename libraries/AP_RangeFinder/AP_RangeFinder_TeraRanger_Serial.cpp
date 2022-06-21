@@ -70,7 +70,7 @@ bool AP_RangeFinder_TeraRanger_Serial::get_reading(float &reading_m)
             if (linebuf_len == FRAME_LENGTH) {
                 // calculate CRC8 (tbd)
                 uint8_t crc = 0;
-                crc =crc_crc8((const uint8_t *)&linebuf,FRAME_LENGTH-1);
+                crc = crc_crc8(linebuf, FRAME_LENGTH-1);
                 // if crc matches, extract contents
                 if (crc == linebuf[FRAME_LENGTH-1]) {
                     // calculate distance
