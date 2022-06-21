@@ -26,7 +26,7 @@ uint32_t RF_TeraRanger_Serial::packet_for_alt(uint16_t alt_cm, uint8_t *buffer, 
     buffer[3] = 0xC0; //full strength, no reading error, no overtemp
     
     // calculate CRC8:
-    buffer[4] = crc_crc8((const uint8_t *)&buffer,4);;
+    buffer[4] = crc_crc8(buffer, 4);
 
     return 5;
 }
