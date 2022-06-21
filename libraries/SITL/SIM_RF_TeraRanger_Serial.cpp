@@ -20,9 +20,11 @@ using namespace SITL;
 
 uint32_t RF_TeraRanger_Serial::packet_for_alt(uint16_t alt_cm, uint8_t *buffer, uint8_t buflen)
 {
+    const uint16_t alt_mm = alt_cm * 10;
+
     buffer[0] = 0x57;
-    buffer[1] = (alt_cm & 0xff) * 10; //MSB mm
-    buffer[2] = (alt_cm >> 8) * 10; //LSB mm
+    buffer[1] = (alt_mm >> 8); //MSB mm
+    buffer[2] = (alt_mm & 0xff); //LSB mm
     buffer[3] = 0xC0; //full strength, no reading error, no overtemp
     
     // calculate CRC8:
