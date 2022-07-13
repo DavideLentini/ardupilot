@@ -139,4 +139,7 @@ define AP_NOTIFY_NCP5623_ENABLED 0
 define AP_NOTIFY_PCA9685_ENABLED 0
 define AP_NOTIFY_TOSHIBALED_ENABLED 0
 
+# SkyViper uses AP_Radio, which does its own RC protocol decoding:
+define AP_RCPROTOCOL_ENABLED 0
+
 AUTOBUILD_TARGETS Copter
