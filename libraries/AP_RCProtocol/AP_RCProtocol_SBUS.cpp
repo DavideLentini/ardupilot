@@ -53,6 +53,8 @@
 
 #include "AP_RCProtocol_SBUS.h"
 
+#if AP_RCPROTOCOL_SBUS_ENABLED
+
 #define SBUS_FRAME_SIZE		25
 #define SBUS_INPUT_CHANNELS	16
 #define SBUS_FLAGS_BYTE		23
@@ -195,7 +197,7 @@ void AP_RCProtocol_SBUS::_process_byte(uint32_t timestamp_us, uint8_t b)
     byte_input.buf[byte_input.ofs++] = b;
 
     if (byte_input.ofs == sizeof(byte_input.buf)) {
-        log_data(AP_RCProtocol::SBUS, timestamp_us, byte_input.buf, byte_input.ofs);
+        log_data(rcprotocol_t::SBUS, timestamp_us, byte_input.buf, byte_input.ofs);
         uint16_t values[SBUS_INPUT_CHANNELS];
         uint16_t num_values=0;
         bool sbus_failsafe = false;
@@ -219,3 +221,5 @@ void AP_RCProtocol_SBUS::process_byte(uint8_t b, uint32_t baudrate)
     }
     _process_byte(AP_HAL::micros(), b);
 }
+
+#endif  // AP_RCPROTOCOL_SBUS_ENABLED

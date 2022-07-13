@@ -262,7 +262,7 @@ void AP_RCProtocol_FPort2::_process_byte(uint32_t timestamp_us, uint8_t b)
 
     if (byte_input.control_len > 2 && byte_input.ofs == byte_input.control_len) {
         if (!byte_input.is_downlink) {
-            log_data(AP_RCProtocol::FPORT2, timestamp_us, byte_input.buf, byte_input.ofs);
+            log_data(rcprotocol_t::FPORT2, timestamp_us, byte_input.buf, byte_input.ofs);
             if (check_checksum()) {
                 decode_control(*frame);
             }

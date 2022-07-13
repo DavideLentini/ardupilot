@@ -43,6 +43,9 @@
  * @author Marco Bauer <marco@wtns.de>
  */
 #include "AP_RCProtocol_SUMD.h"
+
+#if AP_RCPROTOCOL_SUMD_ENABLED
+
 #include <AP_Math/crc.h>
 
 #define SUMD_HEADER_LENGTH	3
@@ -248,7 +251,7 @@ void AP_RCProtocol_SUMD::_process_byte(uint32_t timestamp_us, uint8_t byte)
             }
         }
 
-        log_data(AP_RCProtocol::SUMD, timestamp_us, _rxpacket.sumd_data, _rxlen);
+        log_data(rcprotocol_t::SUMD, timestamp_us, _rxpacket.sumd_data, _rxlen);
 
         if (_crcOK) {
 #ifdef SUMD_DEBUG
@@ -332,3 +335,5 @@ void AP_RCProtocol_SUMD::process_byte(uint8_t byte, uint32_t baudrate)
     }
     _process_byte(AP_HAL::micros(), byte);
 }
+
+#endif  // AP_RCPROTOCOL_SUMD_ENABLED

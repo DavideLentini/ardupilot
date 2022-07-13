@@ -17,11 +17,12 @@
 /*
   with thanks to PX4 dsm.c for DSM decoding approach
  */
-#include <AP_Vehicle/AP_Vehicle_Type.h>
+
 #include "AP_RCProtocol_DSM.h"
-#if !APM_BUILD_TYPE(APM_BUILD_iofirmware)
-#include "AP_RCProtocol_SRXL2.h"
-#endif
+
+#if AP_RCPROTOCOL_DSM_ENABLED
+
+#include <AP_Vehicle/AP_Vehicle_Type.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -236,13 +237,13 @@ bool AP_RCProtocol_DSM::dsm_decode(uint32_t frame_time_ms, const uint8_t dsm_fra
 
     // Handle VTX control frame.
     if (haveVtxControl) {
-#if !APM_BUILD_TYPE(APM_BUILD_iofirmware)
+#if AP_RCPROTOCOL_SRXL2_ENABLED
         AP_RCProtocol_SRXL2::configure_vtx(
             (vtxControl & SPEKTRUM_VTX_BAND_MASK)     >> SPEKTRUM_VTX_BAND_SHIFT,
             (vtxControl & SPEKTRUM_VTX_CHANNEL_MASK)  >> SPEKTRUM_VTX_CHANNEL_SHIFT,
             (vtxControl & SPEKTRUM_VTX_POWER_MASK)    >> SPEKTRUM_VTX_POWER_SHIFT,
             (vtxControl & SPEKTRUM_VTX_PIT_MODE_MASK) >> SPEKTRUM_VTX_PIT_MODE_SHIFT);
-#endif
+#endif  // AP_RCProtocol_SRXL2_ENABLED
     }
 
     /*
@@ -483,7 +484,7 @@ bool AP_RCProtocol_DSM::dsm_parse_byte(uint32_t frame_time_ms, uint8_t b, uint16
          * Great, it looks like we might have a frame.  Go ahead and
          * decode it.
          */
-        log_data(AP_RCProtocol::DSM, frame_time_ms * 1000, byte_input.buf, byte_input.ofs);
+        log_data(rcprotocol_t::DSM, frame_time_ms * 1000, byte_input.buf, byte_input.ofs);
 
         decode_ret = dsm_decode(frame_time_ms, byte_input.buf, values, &chan_count, max_channels);
 
@@ -536,3 +537,5 @@ void AP_RCProtocol_DSM::process_byte(uint8_t b, uint32_t baudrate)
     }
     _process_byte(AP_HAL::millis(), b);
 }
+
+#endif  // AP_RCPROTOCOL_DSM_ENABLED

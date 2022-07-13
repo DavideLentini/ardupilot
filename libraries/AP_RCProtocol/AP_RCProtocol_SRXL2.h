@@ -15,7 +15,10 @@
 
 #pragma once
 
-#include "AP_RCProtocol.h"
+#include "AP_RCProtocol_Backend.h"
+
+#if AP_RCPROTOCOL_SRXL2_ENABLED
+
 #include <AP_Math/AP_Math.h>
 #include "AP_RCProtocol_SRXL.h"
 #include "SoftSerial.h"
@@ -77,3 +80,5 @@ private:
     uint32_t _last_handshake_ms;
     uint32_t _handshake_start_ms;
 };
+
+#endif  // AP_RCPROTOCOL_SRXL2_ENABLED

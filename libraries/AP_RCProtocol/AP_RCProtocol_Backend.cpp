@@ -21,6 +21,8 @@
 #include <AP_Vehicle/AP_Vehicle_Type.h>
 #include <AP_Logger/AP_Logger.h>
 
+#if AP_RCPROTOCOL_ENABLED
+
 AP_RCProtocol_Backend::AP_RCProtocol_Backend(AP_RCProtocol &_frontend) :
     frontend(_frontend),
     rc_input_count(0),
@@ -108,7 +110,7 @@ void AP_RCProtocol_Backend::decode_11bit_channels(const uint8_t* data, uint8_t n
 /*
   optionally log RC input data
  */
-void AP_RCProtocol_Backend::log_data(AP_RCProtocol::rcprotocol_t prot, uint32_t timestamp, const uint8_t *data, uint8_t len) const
+void AP_RCProtocol_Backend::log_data(rcprotocol_t prot, uint32_t timestamp, const uint8_t *data, uint8_t len) const
 {
 #if !APM_BUILD_TYPE(APM_BUILD_iofirmware) && !APM_BUILD_TYPE(APM_BUILD_UNKNOWN)
     if (rc().log_raw_data()) {
@@ -143,3 +145,5 @@ void AP_RCProtocol_Backend::log_data(AP_RCProtocol::rcprotocol_t prot, uint32_t 
     }
 #endif
 }
+
+#endif  // AP_RCPROTOCOL_ENABLED

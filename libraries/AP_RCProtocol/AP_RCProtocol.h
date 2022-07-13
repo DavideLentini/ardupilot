@@ -19,20 +19,63 @@
 #include "AP_RCProtocol_config.h"
 
 #include <AP_HAL/AP_HAL.h>
+
+class AP_RCProtocol_Backend;
+
+#include "AP_RCProtocol_config.h"
+
+enum class rcprotocol_t {
+#if AP_RCPROTOCOL_PPMSUM_ENABLED || HAL_WITH_IO_MCU
+    PPM        =  0,
+#endif
+#if AP_RCPROTOCOL_IBUS_ENABLED || HAL_WITH_IO_MCU
+    IBUS       =  1,
+#endif
+#if AP_RCPROTOCOL_SBUS_ENABLED || HAL_WITH_IO_MCU
+    SBUS       =  2,
+#endif
+#if AP_RCPROTOCOL_SBUS_NI_ENABLED || HAL_WITH_IO_MCU
+    SBUS_NI    =  3,
+#endif
+#if AP_RCPROTOCOL_DSM_ENABLED || HAL_WITH_IO_MCU
+    DSM        =  4,
+#endif
+#if AP_RCPROTOCOL_SUMD_ENABLED || HAL_WITH_IO_MCU
+    SUMD       =  5,
+#endif
+#if AP_RCPROTOCOL_SRXL_ENABLED || HAL_WITH_IO_MCU
+    SRXL       =  6,
+#endif
+#if AP_RCPROTOCOL_SRXL2_ENABLED || HAL_WITH_IO_MCU
+    SRXL2      =  7,
+#endif
+#if AP_RCPROTOCOL_CRSF_ENABLED || HAL_WITH_IO_MCU
+    CRSF       =  8,
+#endif
+#if AP_RCPROTOCOL_ST24_ENABLED || HAL_WITH_IO_MCU
+    ST24       =  9,
+#endif
+#if AP_RCPROTOCOL_FPORT_ENABLED || HAL_WITH_IO_MCU
+    FPORT      = 10,
+#endif
+#if AP_RCPROTOCOL_FPORT2_ENABLED || HAL_WITH_IO_MCU
+    FPORT2     = 11,
+#endif
+#if AP_RCPROTOCOL_FASTSBUS_ENABLED || HAL_WITH_IO_MCU
+    FASTSBUS   = 12,
+#endif
+    NONE    //last enum always is None
+};
+
+// return protocol name as a string
+const char *rc_protocol_name_from_protocol(rcprotocol_t protocol);
+
+#if AP_RCPROTOCOL_ENABLED
+
 #include <AP_Common/AP_Common.h>
 
 #define MAX_RCIN_CHANNELS 18
 #define MIN_RCIN_CHANNELS  5
-
-#ifndef AP_RCPROTOCOL_FASTSBUS_ENABLED
-  #ifdef IOMCU_FW
-    #define AP_RCPROTOCOL_FASTSBUS_ENABLED 0
-  #else
-    #define AP_RCPROTOCOL_FASTSBUS_ENABLED 1
-  #endif
-#endif
-
-class AP_RCProtocol_Backend;
 
 class AP_RCProtocol {
 public:
@@ -40,28 +83,6 @@ public:
     ~AP_RCProtocol();
     friend class AP_RCProtocol_Backend;
 
-    enum rcprotocol_t {
-        PPM        =  0,
-        IBUS       =  1,
-        SBUS       =  2,
-        SBUS_NI    =  3,
-        DSM        =  4,
-        SUMD       =  5,
-        SRXL       =  6,
-        SRXL2      =  7,
-        CRSF       =  8,
-        ST24       =  9,
-#if AP_RCPROTOCOL_FPORT_ENABLED
-        FPORT      = 10,
-#endif
-#if AP_RCPROTOCOL_FPORT2_ENABLED
-        FPORT2     = 11,
-#endif
-#if AP_RCPROTOCOL_FASTSBUS_ENABLED
-        FASTSBUS   = 12,
-#endif
-        NONE    //last enum always is None
-    };
     void init();
     bool valid_serial_prot() const
     {
@@ -88,27 +109,47 @@ public:
     // for protocols without strong CRCs we require 3 good frames to lock on
     bool requires_3_frames(enum rcprotocol_t p) {
         switch (p) {
-        case DSM:
-#if AP_RCPROTOCOL_FASTSBUS_ENABLED
-        case FASTSBUS:
+#if AP_RCPROTOCOL_DSM_ENABLED
+        case rcprotocol_t::DSM:
 #endif
-        case SBUS:
-        case SBUS_NI:
-        case PPM:
+#if AP_RCPROTOCOL_FASTSBUS_ENABLED
+        case rcprotocol_t::FASTSBUS:
+#endif
+#if AP_RCPROTOCOL_SBUS_ENABLED
+        case rcprotocol_t::SBUS:
+#endif
+#if AP_RCPROTOCOL_SBUS_NI_ENABLED
+        case rcprotocol_t::SBUS_NI:
+#endif
+#if AP_RCPROTOCOL_PPMSUM_ENABLED
+        case rcprotocol_t::PPM:
+#endif
 #if AP_RCPROTOCOL_FPORT_ENABLED
-        case FPORT:
+        case rcprotocol_t::FPORT:
 #endif
 #if AP_RCPROTOCOL_FPORT2_ENABLED
-        case FPORT2:
+        case rcprotocol_t::FPORT2:
 #endif
             return true;
-        case IBUS:
-        case SUMD:
-        case SRXL:
-        case SRXL2:
-        case CRSF:
-        case ST24:
-        case NONE:
+#if AP_RCPROTOCOL_IBUS_ENABLED
+        case rcprotocol_t::IBUS:
+#endif
+#if AP_RCPROTOCOL_SUMD_ENABLED
+        case rcprotocol_t::SUMD:
+#endif
+#if AP_RCPROTOCOL_SRXL_ENABLED
+        case rcprotocol_t::SRXL:
+#endif
+#if AP_RCPROTOCOL_SRXL2_ENABLED
+        case rcprotocol_t::SRXL2:
+#endif
+#if AP_RCPROTOCOL_CRSF_ENABLED
+        case rcprotocol_t::CRSF:
+#endif
+#if AP_RCPROTOCOL_ST24_ENABLED
+        case rcprotocol_t::ST24:
+#endif
+        case rcprotocol_t::NONE:
             return false;
         }
         return false;
@@ -121,9 +162,6 @@ public:
     void start_bind(void);
     int16_t get_RSSI(void) const;
     int16_t get_rx_link_quality(void) const;
-
-    // return protocol name as a string
-    static const char *protocol_name_from_protocol(rcprotocol_t protocol);
 
     // return protocol name as a string
     const char *protocol_name(void) const;
@@ -165,10 +203,10 @@ private:
     // return true if a specific protocol is enabled
     bool protocol_enabled(enum rcprotocol_t protocol) const;
 
-    enum rcprotocol_t _detected_protocol = NONE;
+    enum rcprotocol_t _detected_protocol = rcprotocol_t::NONE;
     uint16_t _disabled_for_pulses;
     bool _detected_with_bytes;
-    AP_RCProtocol_Backend *backend[NONE];
+    AP_RCProtocol_Backend *backend[uint8_t(rcprotocol_t::NONE)];
     bool _new_input;
     uint32_t _last_input_ms;
     bool _failsafe_active;
@@ -191,3 +229,5 @@ namespace AP {
 };
 
 #include "AP_RCProtocol_Backend.h"
+
+#endif  // AP_RCPROTOCOL_ENABLED

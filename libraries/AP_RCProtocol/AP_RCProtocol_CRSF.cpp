@@ -18,6 +18,9 @@
  */
 
 #include "AP_RCProtocol.h"
+
+#if AP_RCPROTOCOL_CRSF_ENABLED
+
 #include "AP_RCProtocol_SRXL.h"
 #include "AP_RCProtocol_CRSF.h"
 #include <AP_HAL/AP_HAL.h>
@@ -238,7 +241,7 @@ void AP_RCProtocol_CRSF::_process_byte(uint32_t timestamp_us, uint8_t byte)
 
     // decode whatever we got and expect
     if (_frame_ofs == _frame.length + CSRF_HEADER_LEN) {
-        log_data(AP_RCProtocol::CRSF, timestamp_us, (const uint8_t*)&_frame, _frame_ofs - CSRF_HEADER_LEN);
+        log_data(rcprotocol_t::CRSF, timestamp_us, (const uint8_t*)&_frame, _frame_ofs - CSRF_HEADER_LEN);
 
         // we consumed the partial frame, reset
         _frame_ofs = 0;
@@ -594,3 +597,5 @@ namespace AP {
         return AP_RCProtocol_CRSF::get_singleton();
     }
 };
+
+#endif  // AP_RCPROTOCOL_CRSF_ENABLED

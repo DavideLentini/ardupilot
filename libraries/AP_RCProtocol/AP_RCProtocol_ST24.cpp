@@ -44,6 +44,8 @@
  */
 #include "AP_RCProtocol_ST24.h"
 
+#if AP_RCPROTOCOL_ST24_ENABLED
+
 // #define SUMD_DEBUG
 extern const AP_HAL::HAL& hal;
 
@@ -138,7 +140,7 @@ void AP_RCProtocol_ST24::_process_byte(uint8_t byte)
         _rxpacket.crc8 = byte;
         _rxlen++;
 
-        log_data(AP_RCProtocol::ST24, AP_HAL::micros(), (const uint8_t *)&_rxpacket, _rxlen+3);
+        log_data(rcprotocol_t::ST24, AP_HAL::micros(), (const uint8_t *)&_rxpacket, _rxlen+3);
 
         if (st24_crc8((uint8_t *) & (_rxpacket.length), _rxlen) == _rxpacket.crc8) {
 
@@ -233,3 +235,5 @@ void AP_RCProtocol_ST24::process_byte(uint8_t byte, uint32_t baudrate)
     }
     _process_byte(byte);
 }
+
+#endif  // AP_RCPROTOCOL_ST24_ENABLED

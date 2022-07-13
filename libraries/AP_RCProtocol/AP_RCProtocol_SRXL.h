@@ -17,7 +17,10 @@
 
 #pragma once
 
-#include "AP_RCProtocol.h"
+#include "AP_RCProtocol_Backend.h"
+
+#if AP_RCPROTOCOL_SRXL_ENABLED
+
 #include "SoftSerial.h"
 
 #define SRXL_MIN_FRAMESPACE_US 8000U    /* Minumum space between srxl frames in us (applies to all variants)  */
@@ -64,3 +67,5 @@ private:
 
     SoftSerial ss{115200, SoftSerial::SERIAL_CONFIG_8N1};
 };
+
+#endif  // AP_RCPROTOCOL_SRXL_ENABLED

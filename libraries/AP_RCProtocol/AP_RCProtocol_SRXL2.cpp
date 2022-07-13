@@ -18,6 +18,9 @@
  */
 
 #include "AP_RCProtocol.h"
+
+#if AP_RCPROTOCOL_SRXL2_ENABLED
+
 #include "AP_RCProtocol_SRXL2.h"
 #include <AP_Math/AP_Math.h>
 #include <AP_RCTelemetry/AP_Spektrum_Telem.h>
@@ -130,7 +133,7 @@ void AP_RCProtocol_SRXL2::_process_byte(uint32_t timestamp_us, uint8_t byte)
         }
 
         if (_buflen == _frame_len_full) {
-            log_data(AP_RCProtocol::SRXL2, timestamp_us, _buffer, _buflen);
+            log_data(rcprotocol_t::SRXL2, timestamp_us, _buffer, _buflen);
             // we got a full frame but never handshaked before
             if (!is_bootstrapped()) {
                 if (_buffer[1] == 0x21) {
@@ -258,7 +261,7 @@ void AP_RCProtocol_SRXL2::process_byte(uint8_t byte, uint32_t baudrate)
 void AP_RCProtocol_SRXL2::process_handshake(uint32_t baudrate)
 {
     // only bootstrap if only SRXL2 is enabled
-    if (baudrate != 115200 || (get_rc_protocols_mask() & ~(1U<<(uint8_t(AP_RCProtocol::SRXL2)+1)))) {
+    if (baudrate != 115200 || (get_rc_protocols_mask() & ~(1U<<(uint8_t(rcprotocol_t::SRXL2)+1)))) {
         _handshake_start_ms = 0;
         return;
     }
@@ -457,3 +460,5 @@ void srxlOnVtx(SrxlVtxData* pVtxData)
 {
     AP_RCProtocol_SRXL2::configure_vtx(pVtxData->band, pVtxData->channel, pVtxData->power, pVtxData->pit);
 }
+
+#endif  // AP_RCPROTOCOL_SRXL2_ENABLED

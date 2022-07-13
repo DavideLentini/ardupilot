@@ -21,7 +21,8 @@
 
 #if AP_RCPROTOCOL_FPORT2_ENABLED
 
-#include "AP_RCProtocol.h"
+#include "AP_RCProtocol_Backend.h"
+
 #include "SoftSerial.h"
 #include <AP_Frsky_Telem/AP_Frsky_SPort.h>
 

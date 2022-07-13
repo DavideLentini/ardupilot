@@ -18,6 +18,9 @@
 #pragma once
 
 #include "AP_RCProtocol.h"
+
+#if AP_RCPROTOCOL_ENABLED
+
 #include <AP_HAL/utility/sparse-endian.h>
 
 class AP_RCProtocol_Backend {
@@ -109,7 +112,7 @@ protected:
     void add_input(uint8_t num_channels, uint16_t *values, bool in_failsafe, int16_t rssi=-1, int16_t rx_link_quality=-1);
     AP_RCProtocol &frontend;
 
-    void log_data(AP_RCProtocol::rcprotocol_t prot, uint32_t timestamp, const uint8_t *data, uint8_t len) const;
+    void log_data(rcprotocol_t prot, uint32_t timestamp, const uint8_t *data, uint8_t len) const;
 
     // decode channels from the standard 11bit format (used by CRSF and SBUS)
     void decode_11bit_channels(const uint8_t* data, uint8_t nchannels, uint16_t *values, uint16_t mult, uint16_t div, uint16_t offset);
@@ -124,3 +127,5 @@ private:
     int16_t rssi = -1;
     int16_t rx_link_quality = -1;
 };
+
+#endif  // AP_RCPROTOCOL_ENABLED

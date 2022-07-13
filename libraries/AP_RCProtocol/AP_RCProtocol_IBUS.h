@@ -19,7 +19,10 @@
 #define IBUS_FRAME_SIZE		32
 #define IBUS_INPUT_CHANNELS	14
 
-#include "AP_RCProtocol.h"
+#include "AP_RCProtocol_Backend.h"
+
+#if AP_RCPROTOCOL_IBUS_ENABLED
+
 #include "SoftSerial.h"
 
 class AP_RCProtocol_IBUS : public AP_RCProtocol_Backend
@@ -40,3 +43,5 @@ private:
         uint32_t last_byte_us;
     } byte_input;
 };
+
+#endif  // AP_RCPROTOCOL_IBUS_ENABLED
