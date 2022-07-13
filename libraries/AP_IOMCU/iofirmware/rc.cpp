@@ -74,9 +74,15 @@ void AP_IOMCU_FW::rcin_serial_init(void)
                                SD_PARITY_ERROR);
     // disable input for SBUS with pulses, we will use the UART for
     // SBUS and FPORT
-    AP::RC().disable_for_pulses(AP_RCProtocol::SBUS);
-    AP::RC().disable_for_pulses(AP_RCProtocol::SBUS_NI);
-    AP::RC().disable_for_pulses(AP_RCProtocol::FPORT);
+#if AP_RCPROTOCOL_SBUS_ENABLED
+    AP::RC().disable_for_pulses(rcprotocol_t::SBUS);
+#endif
+#if AP_RCPROTOCOL_SBUS_NI_ENABLED
+    AP::RC().disable_for_pulses(rcprotocol_t::SBUS_NI);
+#endif
+#if AP_RCPROTOCOL_FPORT_ENABLED
+    AP::RC().disable_for_pulses(rcprotocol_t::FPORT);
+#endif
 }
 
 static struct {

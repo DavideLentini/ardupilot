@@ -991,7 +991,7 @@ const char *AP_IOMCU::get_rc_protocol(void)
     if (!is_chibios_backend) {
         return nullptr;
     }
-    return AP_RCProtocol::protocol_name_from_protocol((AP_RCProtocol::rcprotocol_t)rc_input.rc_protocol);
+    return rc_protocol_name_from_protocol((rcprotocol_t)rc_input.rc_protocol);
 }
 
 /*
