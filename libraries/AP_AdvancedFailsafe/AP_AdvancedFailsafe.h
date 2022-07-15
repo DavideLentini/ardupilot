@@ -25,6 +25,10 @@
 #include <inttypes.h>
 #include <AP_Common/Location.h>
 
+#include "AP_AdvancedFailsafe_config.h"
+
+#if AP_ADVANCEDFAILSAFE_ENABLED
+
 class AP_AdvancedFailsafe
 {
 public:
@@ -164,3 +168,5 @@ private:
 namespace AP {
     AP_AdvancedFailsafe *advancedfailsafe();
 };
+
+#endif  // AP_ADVANCEDFAILSAFE_ENABLED
