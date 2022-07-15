@@ -466,7 +466,7 @@ void Copter::do_failsafe_action(FailsafeAction action, ModeReason reason){
             set_mode_SmartRTL_or_land_with_pause(reason);
             break;
         case FailsafeAction::TERMINATE: {
-#if ADVANCED_FAILSAFE == ENABLED
+#if AP_ADVANCEDFAILSAFE_ENABLED
             g2.afs.gcs_terminate(true, "Failsafe");
 #else
             arming.disarm(AP_Arming::Method::FAILSAFE_ACTION_TERMINATE);

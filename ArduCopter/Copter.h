@@ -36,6 +36,7 @@
 // Application dependencies
 #include <AP_Logger/AP_Logger.h>            // ArduPilot Mega Flash Memory Library
 #include <AP_Math/AP_Math.h>                // ArduPilot Mega Vector/Matrix math Library
+#include <AP_AdvancedFailsafe/AP_AdvancedFailsafe_config.h>
 #include <AP_AccelCal/AP_AccelCal.h>        // interface and maths for accelerometer calibration
 #include <AP_InertialSensor/AP_InertialSensor.h>                // ArduPilot Mega Inertial Sensor (accel & gyro) Library
 #include <AP_AHRS/AP_AHRS.h>                                    // AHRS (Attitude Heading Reference System) interface library for ArduPilot
@@ -143,7 +144,7 @@
  #include <AP_OSD/AP_OSD.h>
 #endif
 
-#if ADVANCED_FAILSAFE == ENABLED
+#if AP_ADVANCEDFAILSAFE_ENABLED
  # include "afs_copter.h"
 #endif
 #if TOY_MODE_ENABLED == ENABLED
@@ -180,7 +181,7 @@ public:
     friend class ParametersG2;
     friend class AP_Avoidance_Copter;
 
-#if ADVANCED_FAILSAFE == ENABLED
+#if AP_ADVANCEDFAILSAFE_ENABLED
     friend class AP_AdvancedFailsafe_Copter;
 #endif
     friend class AP_Arming_Copter;
@@ -759,7 +760,7 @@ private:
     // failsafe.cpp
     void failsafe_enable();
     void failsafe_disable();
-#if ADVANCED_FAILSAFE == ENABLED
+#if AP_ADVANCEDFAILSAFE_ENABLED
     void afs_fs_check(void);
 #endif
 
