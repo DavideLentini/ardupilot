@@ -88,10 +88,6 @@
   #define RESET_SWITCH_CHAN_PWM    1750
 #endif
 
-#ifndef ADVANCED_FAILSAFE
-  #define ADVANCED_FAILSAFE DISABLED
-#endif
-
 #ifndef STATS_ENABLED
  # define STATS_ENABLED ENABLED
 #endif

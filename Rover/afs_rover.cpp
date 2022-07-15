@@ -4,7 +4,7 @@
 
 #include "Rover.h"
 
-#if ADVANCED_FAILSAFE == ENABLED
+#if AP_ADVANCEDFAILSAFE_ENABLED
 
 /*
   Setup radio_out values for all channels to termination values
@@ -29,4 +29,4 @@ AP_AdvancedFailsafe::control_mode AP_AdvancedFailsafe_Rover::afs_mode(void)
     return AP_AdvancedFailsafe::AFS_STABILIZED;
 }
 
-#endif  // ADVANCED_FAILSAFE
+#endif  // AP_ADVANCEDFAILSAFE_ENABLED

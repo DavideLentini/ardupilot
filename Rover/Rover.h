@@ -23,6 +23,7 @@
 // Libraries
 #include <AP_Common/AP_Common.h>
 #include <AP_HAL/AP_HAL.h>
+#include <AP_AdvancedFailsafe/AP_AdvancedFailsafe_config.h>
 #include <AP_BattMonitor/AP_BattMonitor.h>          // Battery monitor library
 #include <AP_Camera/AP_Camera.h>                    // Camera triggering
 #include <AP_Mount/AP_Mount.h>                      // Camera/Antenna mount
@@ -49,7 +50,7 @@
 // Configuration
 #include "config.h"
 #include "defines.h"
-#if ADVANCED_FAILSAFE == ENABLED
+#if AP_ADVANCEDFAILSAFE_ENABLED
 #include "afs_rover.h"
 #endif
 #include "Parameters.h"
@@ -65,7 +66,7 @@ public:
     friend class ParametersG2;
     friend class AP_Rally_Rover;
     friend class AP_Arming_Rover;
-#if ADVANCED_FAILSAFE == ENABLED
+#if AP_ADVANCEDFAILSAFE_ENABLED
     friend class AP_AdvancedFailsafe_Rover;
 #endif
     friend class GCS_Rover;
@@ -280,7 +281,7 @@ private:
     // failsafe.cpp
     void failsafe_trigger(uint8_t failsafe_type, const char* type_str, bool on);
     void handle_battery_failsafe(const char* type_str, const int8_t action);
-#if ADVANCED_FAILSAFE == ENABLED
+#if AP_ADVANCEDFAILSAFE_ENABLED
     void afs_fs_check(void);
 #endif
 

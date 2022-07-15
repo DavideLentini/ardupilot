@@ -302,7 +302,7 @@ public:
     // control over servo output ranges
     SRV_Channels servo_channels;
 
-#if ADVANCED_FAILSAFE == ENABLED
+#if AP_ADVANCEDFAILSAFE_ENABLED
     // advanced failsafe library
     AP_AdvancedFailsafe_Rover afs;
 #endif
