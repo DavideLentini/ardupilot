@@ -302,8 +302,11 @@ void AP_RCProtocol_SRXL2::send_on_uart(uint8_t* pBuffer, uint8_t length)
     }
 }
 
+#endif  // AP_RCPROTOCOL_SRXL2_ENABLED
+
+#if AP_VIDEOTX_ENABLED
 // configure the video transmitter, the input values are Spektrum-oriented
-void AP_RCProtocol_SRXL2::configure_vtx(uint8_t band, uint8_t channel, uint8_t power, uint8_t pitmode)
+void AP_RCProtocol_Backend::configure_vtx(uint8_t band, uint8_t channel, uint8_t power, uint8_t pitmode)
 {
     AP_VideoTX& vtx = AP::vtx();
     // VTX Band (0 = Fatshark, 1 = Raceband, 2 = E, 3 = B, 4 = A)
@@ -354,6 +357,9 @@ void AP_RCProtocol_SRXL2::configure_vtx(uint8_t band, uint8_t channel, uint8_t p
         break;
     }
 }
+#endif  // AP_VIDEOTX_ENABLED
+
+#if AP_RCPROTOCOL_SRXL2_ENABLED
 
 // send data to the uart
 void AP_RCProtocol_SRXL2::_send_on_uart(uint8_t* pBuffer, uint8_t length)
@@ -458,7 +464,7 @@ bool srxlOnBind(SrxlFullID device, SrxlBindData info)
 // User-provided callback routine to handle reception of a VTX control packet.
 void srxlOnVtx(SrxlVtxData* pVtxData)
 {
-    AP_RCProtocol_SRXL2::configure_vtx(pVtxData->band, pVtxData->channel, pVtxData->power, pVtxData->pit);
+    AP_RCProtocol_Backend::configure_vtx(pVtxData->band, pVtxData->channel, pVtxData->power, pVtxData->pit);
 }
 
 #endif  // AP_RCPROTOCOL_SRXL2_ENABLED

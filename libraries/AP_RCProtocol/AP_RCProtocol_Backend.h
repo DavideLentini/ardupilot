@@ -93,7 +93,10 @@ public:
     virtual bool is_rx_active() const {
         return true;
     }
-    
+
+    // provide facility for Spektrum-like backends to configure AP_VideoTX:
+    static void configure_vtx(uint8_t band, uint8_t channel, uint8_t power, uint8_t pitmode);
+
 protected:
     struct Channels11Bit_8Chan {
 #if __BYTE_ORDER != __LITTLE_ENDIAN

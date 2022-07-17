@@ -237,13 +237,11 @@ bool AP_RCProtocol_DSM::dsm_decode(uint32_t frame_time_ms, const uint8_t dsm_fra
 
     // Handle VTX control frame.
     if (haveVtxControl) {
-#if AP_RCPROTOCOL_SRXL2_ENABLED
-        AP_RCProtocol_SRXL2::configure_vtx(
+        AP_RCProtocol_Backend::configure_vtx(
             (vtxControl & SPEKTRUM_VTX_BAND_MASK)     >> SPEKTRUM_VTX_BAND_SHIFT,
             (vtxControl & SPEKTRUM_VTX_CHANNEL_MASK)  >> SPEKTRUM_VTX_CHANNEL_SHIFT,
             (vtxControl & SPEKTRUM_VTX_POWER_MASK)    >> SPEKTRUM_VTX_POWER_SHIFT,
             (vtxControl & SPEKTRUM_VTX_PIT_MODE_MASK) >> SPEKTRUM_VTX_PIT_MODE_SHIFT);
-#endif  // AP_RCProtocol_SRXL2_ENABLED
     }
 
     /*
