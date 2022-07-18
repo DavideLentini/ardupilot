@@ -2983,6 +2983,8 @@ def add_iomcu_firmware_defaults(f):
 #ifndef HAL_GYROFFT_ENABLED
 #define HAL_GYROFFT_ENABLED 0
 #endif
+
+#define AP_VIDEOTX_ENABLED 0
 ''')
 
 def add_normal_firmware_defaults(f):
