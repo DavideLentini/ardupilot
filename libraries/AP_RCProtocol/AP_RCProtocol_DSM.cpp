@@ -23,6 +23,7 @@
 #if AP_RCPROTOCOL_DSM_ENABLED
 
 #include <AP_Vehicle/AP_Vehicle_Type.h>
+#include <AP_VideoTX/AP_VideoTX_config.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -235,6 +236,7 @@ bool AP_RCProtocol_DSM::dsm_decode(uint32_t frame_time_ms, const uint8_t dsm_fra
         return false;
     }
 
+#if AP_VIDEOTX_ENABLED
     // Handle VTX control frame.
     if (haveVtxControl) {
         AP_RCProtocol_Backend::configure_vtx(
@@ -243,6 +245,7 @@ bool AP_RCProtocol_DSM::dsm_decode(uint32_t frame_time_ms, const uint8_t dsm_fra
             (vtxControl & SPEKTRUM_VTX_POWER_MASK)    >> SPEKTRUM_VTX_POWER_SHIFT,
             (vtxControl & SPEKTRUM_VTX_PIT_MODE_MASK) >> SPEKTRUM_VTX_PIT_MODE_SHIFT);
     }
+#endif
 
     /*
      * The encoding of the first two bytes is uncertain, so we're

@@ -19,6 +19,9 @@
 
 #include "AP_RCProtocol.h"
 
+#include <AP_VideoTX/AP_VideoTX.h>
+#include "AP_RCProtocol_Backend.h"
+
 #if AP_RCPROTOCOL_SRXL2_ENABLED
 
 #include "AP_RCProtocol_SRXL2.h"
@@ -26,7 +29,6 @@
 #include <AP_RCTelemetry/AP_Spektrum_Telem.h>
 #include <AP_Vehicle/AP_Vehicle_Type.h>
 #include <AP_HAL/utility/sparse-endian.h>
-#include <AP_VideoTX/AP_VideoTX.h>
 
 #include "spm_srxl.h"
 
@@ -304,7 +306,7 @@ void AP_RCProtocol_SRXL2::send_on_uart(uint8_t* pBuffer, uint8_t length)
 
 #endif  // AP_RCPROTOCOL_SRXL2_ENABLED
 
-#if AP_VIDEOTX_ENABLED
+#if AP_RCPROTOCOL_ENABLED && AP_VIDEOTX_ENABLED
 // configure the video transmitter, the input values are Spektrum-oriented
 void AP_RCProtocol_Backend::configure_vtx(uint8_t band, uint8_t channel, uint8_t power, uint8_t pitmode)
 {
@@ -357,7 +359,7 @@ void AP_RCProtocol_Backend::configure_vtx(uint8_t band, uint8_t channel, uint8_t
         break;
     }
 }
-#endif  // AP_VIDEOTX_ENABLED
+#endif  // AP_RCPROTOCOL_ENABLED && AP_VIDEOTX_ENABLED
 
 #if AP_RCPROTOCOL_SRXL2_ENABLED
 
@@ -464,7 +466,9 @@ bool srxlOnBind(SrxlFullID device, SrxlBindData info)
 // User-provided callback routine to handle reception of a VTX control packet.
 void srxlOnVtx(SrxlVtxData* pVtxData)
 {
+#if AP_VIDEOTX_ENABLED
     AP_RCProtocol_Backend::configure_vtx(pVtxData->band, pVtxData->channel, pVtxData->power, pVtxData->pit);
+#endif
 }
 
 #endif  // AP_RCPROTOCOL_SRXL2_ENABLED

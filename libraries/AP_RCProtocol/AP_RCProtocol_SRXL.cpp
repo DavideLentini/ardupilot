@@ -26,6 +26,7 @@
 
 #include <AP_Math/crc.h>
 #include <AP_Math/AP_Math.h>
+#include <AP_VideoTX/AP_VideoTX_config.h>
 
 // #define SUMD_DEBUG
 extern const AP_HAL::HAL& hal;
