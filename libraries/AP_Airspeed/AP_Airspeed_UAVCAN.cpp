@@ -17,11 +17,6 @@ UC_REGISTRY_BINDER(AirspeedCb, uavcan::equipment::air_data::RawAirData);
 AP_Airspeed_UAVCAN::DetectedModules AP_Airspeed_UAVCAN::_detected_modules[];
 HAL_Semaphore AP_Airspeed_UAVCAN::_sem_registry;
 
-// constructor
-AP_Airspeed_UAVCAN::AP_Airspeed_UAVCAN(AP_Airspeed &_frontend, uint8_t _instance) :
-    AP_Airspeed_Backend(_frontend, _instance)
-{}
-
 void AP_Airspeed_UAVCAN::subscribe_msgs(AP_UAVCAN* ap_uavcan)
 {
     if (ap_uavcan == nullptr) {
