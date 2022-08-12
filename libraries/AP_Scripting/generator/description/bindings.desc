@@ -160,6 +160,7 @@ singleton AP_Proximity method get_object_angle_and_distance boolean uint8_t 0 UI
 
 include AP_RangeFinder/AP_RangeFinder.h
 
+singleton RangeFinder depends AP_RANGEFINDER_ENABLED == 1
 singleton RangeFinder rename rangefinder
 singleton RangeFinder method num_sensors uint8_t
 singleton RangeFinder method has_orientation boolean Rotation'enum ROTATION_NONE ROTATION_MAX-1
