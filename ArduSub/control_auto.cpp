@@ -542,6 +542,7 @@ float Sub::get_auto_heading()
 // Return true if it is possible to recover from a rangefinder failure
 bool Sub::auto_terrain_recover_start()
 {
+#if AP_RANGEFINDER_ENABLED
     // Check rangefinder status to see if recovery is possible
     switch (rangefinder.status_orient(ROTATION_PITCH_270)) {
 
@@ -578,6 +579,9 @@ bool Sub::auto_terrain_recover_start()
 
     gcs().send_text(MAV_SEVERITY_WARNING, "Attempting auto failsafe recovery");
     return true;
+#else
+    return false;
+#endif
 }
 
 // Attempt recovery from terrain failsafe
@@ -586,7 +590,6 @@ bool Sub::auto_terrain_recover_start()
 void Sub::auto_terrain_recover_run()
 {
     float target_climb_rate = 0;
-    static uint32_t rangefinder_recovery_ms = 0;
 
     // if not armed set throttle to zero and exit immediately
     if (!motors.armed()) {
@@ -598,6 +601,9 @@ void Sub::auto_terrain_recover_run()
         pos_control.relax_z_controller(motors.get_throttle_hover());                // Reset z axis controller
         return;
     }
+
+#if AP_RANGEFINDER_ENABLED
+    static uint32_t rangefinder_recovery_ms = 0;
 
     switch (rangefinder.status_orient(ROTATION_PITCH_270)) {
 
@@ -645,6 +651,10 @@ void Sub::auto_terrain_recover_run()
         rangefinder_recovery_ms = 0;
         return;
     }
+#else
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "Terrain failsafe recovery failure: No Rangefinder!");
+    failsafe_terrain_act();
+#endif
 
     // exit on failure (timeout)
     if (AP_HAL::millis() > fs_terrain_recover_start_ms + FS_TERRAIN_RECOVER_TIMEOUT_MS) {
