@@ -15,7 +15,7 @@
 
 #include "AP_Proximity_RangeFinder.h"
 
-#if HAL_PROXIMITY_ENABLED
+#if AP_PROXIMITY_RANGEFINDER_ENABLED
 #include <AP_HAL/AP_HAL.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -94,4 +94,4 @@ bool AP_Proximity_RangeFinder::get_upward_distance(float &distance) const
     return false;
 }
 
-#endif // HAL_PROXIMITY_ENABLED
+#endif // AP_PROXIMITY_RANGEFINDER_ENABLED

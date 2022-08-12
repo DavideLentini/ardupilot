@@ -325,10 +325,12 @@ void AP_Proximity::detect_instance(uint8_t instance)
         }
         break;
 
+#if AP_PROXIMITY_RANGEFINDER_ENABLED
     case Type::RangeFinder:
         state[instance].instance = instance;
         drivers[instance] = new AP_Proximity_RangeFinder(*this, state[instance]);
         return;
+#endif
 
     case Type::SF40C:
         if (AP_Proximity_LightWareSF40C::detect()) {

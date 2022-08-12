@@ -46,7 +46,9 @@ public:
         // 1 was SF40C_v09
         MAV     = 2,
         TRTOWER = 3,
+#if AP_PROXIMITY_RANGEFINDER_ENABLED
         RangeFinder = 4,
+#endif
         RPLidarA2 = 5,
         TRTOWEREVO = 6,
         SF40C = 7,
