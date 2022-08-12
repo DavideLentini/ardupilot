@@ -27,6 +27,7 @@
 #include <AP_OpenDroneID/AP_OpenDroneID.h>
 #include <AP_Mount/AP_Mount.h>
 #include <AC_Fence/AC_Fence.h>
+#include <AP_RangeFinder/AP_RangeFinder_config.h>
 
 #include "ap_message.h"
 
@@ -268,10 +269,12 @@ public:
 #endif
     void send_battery_status(const uint8_t instance) const;
     bool send_battery_status();
+#if AP_RANGEFINDER_ENABLED
     void send_distance_sensor();
     // send_rangefinder sends only if a downward-facing instance is
     // found.  Rover overrides this!
     virtual void send_rangefinder() const;
+#endif  // AP_RANGEFINDER_ENABLED
     void send_proximity();
     virtual void send_nav_controller_output() const = 0;
     virtual void send_pid_tuning() = 0;

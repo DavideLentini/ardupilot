@@ -380,6 +380,8 @@ bool GCS_MAVLINK::send_battery_status()
 #endif
 }
 
+#if AP_RANGEFINDER_ENABLED
+
 void GCS_MAVLINK::send_distance_sensor(const AP_RangeFinder_Backend *sensor, const uint8_t instance) const
 {
     if (!sensor->has_data()) {
@@ -471,6 +473,7 @@ void GCS_MAVLINK::send_rangefinder() const
             s->distance(),
             s->voltage_mv() * 0.001f);
 }
+#endif  // AP_RANGEFINDER_ENABLED
 
 #if HAL_PROXIMITY_ENABLED
 void GCS_MAVLINK::send_proximity()
@@ -3559,10 +3562,12 @@ void GCS_MAVLINK::handle_can_frame(const mavlink_message_t &msg) const
 
 void GCS_MAVLINK::handle_distance_sensor(const mavlink_message_t &msg)
 {
+#if AP_RANGEFINDER_ENABLED
     RangeFinder *rangefinder = AP::rangefinder();
     if (rangefinder != nullptr) {
         rangefinder->handle_msg(msg);
     }
+#endif
 
 #if HAL_PROXIMITY_ENABLED
     AP_Proximity *proximity = AP::proximity();
@@ -5187,7 +5192,7 @@ void GCS_MAVLINK::send_generator_status() const
 }
 #endif
 
-#if APM_BUILD_TYPE(APM_BUILD_Rover)
+#if AP_RANGEFINDER_ENABLED && APM_BUILD_TYPE(APM_BUILD_Rover)
 void GCS_MAVLINK::send_water_depth() const
 {
     if (!HAVE_PAYLOAD_SPACE(chan, WATER_DEPTH)) {
@@ -5236,7 +5241,7 @@ void GCS_MAVLINK::send_water_depth() const
     }
 
 }
-#endif
+#endif  // AP_RANGEFINDER_ENABLED && APM_BUILD_TYPE(APM_BUILD_Rover)
 
 #if HAL_ADSB_ENABLED
 void GCS_MAVLINK::send_uavionix_adsb_out_status() const
@@ -5405,6 +5410,7 @@ bool GCS_MAVLINK::try_send_message(const enum ap_message id)
         send_fence_status();
         break;
 
+#if AP_RANGEFINDER_ENABLED
     case MSG_RANGEFINDER:
         CHECK_PAYLOAD_SIZE(RANGEFINDER);
         send_rangefinder();
@@ -5413,6 +5419,7 @@ bool GCS_MAVLINK::try_send_message(const enum ap_message id)
     case MSG_DISTANCE_SENSOR:
         send_distance_sensor();
         break;
+#endif
 
     case MSG_CAMERA_FEEDBACK:
         {
@@ -5640,7 +5647,7 @@ bool GCS_MAVLINK::try_send_message(const enum ap_message id)
         break;
 
     case MSG_WATER_DEPTH:
-#if APM_BUILD_TYPE(APM_BUILD_Rover)
+#if AP_RANGEFINDER_ENABLED && APM_BUILD_TYPE(APM_BUILD_Rover)
         CHECK_PAYLOAD_SIZE(WATER_DEPTH);
         send_water_depth();
 #endif
