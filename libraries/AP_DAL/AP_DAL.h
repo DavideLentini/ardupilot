@@ -129,9 +129,12 @@ public:
     AP_DAL_Baro &baro() { return _baro; }
     AP_DAL_GPS &gps() { return _gps; }
 
+#if AP_RANGEFINDER_ENABLED
     AP_DAL_RangeFinder *rangefinder() {
         return _rangefinder;
     }
+#endif
+
     AP_DAL_Airspeed *airspeed() {
         return _airspeed;
     }
@@ -257,16 +260,20 @@ public:
     }
 
     void handle_message(const log_RRNH &msg) {
+#if AP_RANGEFINDER_ENABLED
         if (_rangefinder == nullptr) {
             _rangefinder = new AP_DAL_RangeFinder;
         }
         _rangefinder->handle_message(msg);
+#endif
     }
     void handle_message(const log_RRNI &msg) {
+#if AP_RANGEFINDER_ENABLED
         if (_rangefinder == nullptr) {
             _rangefinder = new AP_DAL_RangeFinder;
         }
         _rangefinder->handle_message(msg);
+#endif
     }
 
     void handle_message(const log_RGPH &msg) {
@@ -346,7 +353,9 @@ private:
     AP_DAL_InertialSensor _ins;
     AP_DAL_Baro _baro;
     AP_DAL_GPS _gps;
+#if AP_RANGEFINDER_ENABLED
     AP_DAL_RangeFinder *_rangefinder;
+#endif
     AP_DAL_Compass _compass;
     AP_DAL_Airspeed *_airspeed;
     AP_DAL_Beacon *_beacon;

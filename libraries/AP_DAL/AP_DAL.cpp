@@ -82,9 +82,11 @@ void AP_DAL::start_frame(AP_DAL::FrameType frametype)
     if (_airspeed) {
         _airspeed->start_frame();
     }
+#if AP_RANGEFINDER_ENABLED
     if (_rangefinder) {
         _rangefinder->start_frame();
     }
+#endif
     if (_beacon) {
         _beacon->start_frame();
     }
@@ -124,10 +126,12 @@ void AP_DAL::init_sensors(void)
       at the time we startup the EKF
      */
 
+#if AP_RANGEFINDER_ENABLED
     auto *rng = AP::rangefinder();
     if (rng && rng->num_sensors() > 0) {
         alloc_failed |= (_rangefinder = new AP_DAL_RangeFinder) == nullptr;
     }
+#endif
 
 #if AP_AIRSPEED_ENABLED
     auto *aspeed = AP::airspeed();

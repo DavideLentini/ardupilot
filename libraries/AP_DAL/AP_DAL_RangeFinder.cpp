@@ -3,6 +3,9 @@
 #include <AP_Logger/AP_Logger.h>
 
 #include <AP_RangeFinder/AP_RangeFinder_Backend.h>
+
+#if AP_RANGEFINDER_ENABLED
+
 #include "AP_DAL.h"
 #include <AP_BoardConfig/AP_BoardConfig.h>
 
@@ -144,3 +147,5 @@ void AP_DAL_RangeFinder::handle_message(const log_RRNI &msg)
         }
     }
 }
+
+#endif  // AP_RANGEFINDER_ENABLED
