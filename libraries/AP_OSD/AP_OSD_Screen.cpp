@@ -2141,6 +2141,7 @@ void AP_OSD_Screen::draw_fence(uint8_t x, uint8_t y)
 
 void AP_OSD_Screen::draw_rngf(uint8_t x, uint8_t y)
 {
+#if AP_RANGEFINDER_ENABLED
     RangeFinder *rangefinder = RangeFinder::get_singleton();
     if (rangefinder == nullptr) {
        return;
@@ -2152,6 +2153,7 @@ void AP_OSD_Screen::draw_rngf(uint8_t x, uint8_t y)
         const char *format = distance < 9.995 ? "%c %1.2f%c" : "%c%2.2f%c";
         backend->write(x, y, false, format, SYMBOL(SYM_RNGFD), u_scale(DISTANCE, distance), u_icon(DISTANCE));
     }
+#endif
 }
 
 #define DRAW_SETTING(n) if (n.enabled) draw_ ## n(n.xpos, n.ypos)
