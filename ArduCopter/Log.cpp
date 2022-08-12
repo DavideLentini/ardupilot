@@ -40,10 +40,12 @@ void Copter::Log_Write_Control_Tuning()
     }
 
     // get surface tracking alts
-    float desired_rangefinder_alt;
-    if (!surface_tracking.get_target_dist_for_logging(desired_rangefinder_alt)) {
-        desired_rangefinder_alt = AP::logger().quiet_nan();
-    }
+    float desired_rangefinder_alt = AP::logger().quiet_nan();
+    float dist_for_logging = AP::logger().quiet_nan();
+#if AP_RANGEFINDER_ENABLED
+    UNUSED_RESULT(surface_tracking.get_target_dist_for_logging(desired_rangefinder_alt));
+    dist_for_logging = surface_tracking.get_dist_for_logging();
+#endif
 
     struct log_Control_Tuning pkt = {
         LOG_PACKET_HEADER_INIT(LOG_CONTROL_TUNING_MSG),
@@ -56,7 +58,7 @@ void Copter::Log_Write_Control_Tuning()
         inav_alt            : inertial_nav.get_position_z_up_cm() * 0.01f,
         baro_alt            : baro_alt,
         desired_rangefinder_alt : desired_rangefinder_alt,
-        rangefinder_alt     : surface_tracking.get_dist_for_logging(),
+        rangefinder_alt     : dist_for_logging,
         terr_alt            : terr_alt,
         target_climb_rate   : target_climb_rate_cms,
         climb_rate          : int16_t(inertial_nav.get_velocity_z_up_cms()) // float -> int16_t

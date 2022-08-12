@@ -659,7 +659,7 @@ const AP_Param::Info Copter::var_info[] = {
     // @Path: ../libraries/AP_RSSI/AP_RSSI.cpp
     GOBJECT(rssi, "RSSI_",  AP_RSSI),
     
-#if RANGEFINDER_ENABLED == ENABLED
+#if AP_RANGEFINDER_ENABLED
     // @Group: RNGFND
     // @Path: ../libraries/AP_RangeFinder/AP_RangeFinder.cpp
     GOBJECT(rangefinder,   "RNGFND", RangeFinder),
@@ -1016,7 +1016,7 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("FLIGHT_OPTIONS", 44, ParametersG2, flight_options, 0),
 
-#if RANGEFINDER_ENABLED == ENABLED
+#if AP_RANGEFINDER_ENABLED
     // @Param: RNGFND_FILT
     // @DisplayName: Rangefinder filter
     // @Description: Rangefinder filter to smooth distance.  Set to zero to disable filtering
@@ -1040,12 +1040,14 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
 
     // ACRO_PR_RATE (47), ACRO_Y_RATE (48), PILOT_Y_RATE (49) and PILOT_Y_EXPO (50) moved to command model class
 
+#if AP_RANGEFINDER_ENABLED
     // @Param: SURFTRAK_MODE
     // @DisplayName: Surface Tracking Mode
     // @Description: set which surface to track in surface tracking
     // @Values: 0:Do not track, 1:Ground, 2:Ceiling
     // @User: Advanced
     AP_GROUPINFO("SURFTRAK_MODE", 51, ParametersG2, surftrak_mode, (uint8_t)Copter::SurfaceTracking::Surface::GROUND),
+#endif
 
     // @Param: FS_DR_ENABLE
     // @DisplayName: DeadReckon Failsafe Action

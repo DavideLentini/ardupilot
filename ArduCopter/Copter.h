@@ -123,7 +123,7 @@
  # include <AP_Terrain/AP_Terrain.h>
 #endif
  # include <AP_OpticalFlow/AP_OpticalFlow.h>
-#if RANGEFINDER_ENABLED == ENABLED
+#if AP_RANGEFINDER_ENABLED
  # include <AP_RangeFinder/AP_RangeFinder.h>
 #endif
 
@@ -264,6 +264,7 @@ private:
     // return rangefinder height interpolated using inertial altitude
     bool get_rangefinder_height_interpolated_cm(int32_t& ret) const;
 
+#if AP_RANGEFINDER_ENABLED
     class SurfaceTracking {
     public:
         // update_surface_offset - manages the vertical offset of the position controller to follow the
@@ -297,6 +298,7 @@ private:
         bool valid_for_logging;     // true if we have a desired target altitude
         bool reset_target;          // true if target should be reset because of change in surface being tracked
     } surface_tracking;
+#endif
 
 #if RPM_ENABLED == ENABLED
     AP_RPM rpm_sensor;

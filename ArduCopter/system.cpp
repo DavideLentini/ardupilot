@@ -72,9 +72,11 @@ void Copter::init_ardupilot()
 
     init_rc_in();               // sets up rc channels from radio
 
+#if AP_RANGEFINDER_ENABLED
     // initialise surface to be tracked in SurfaceTracking
     // must be before rc init to not override initial switch position
     surface_tracking.init((SurfaceTracking::Surface)copter.g2.surftrak_mode.get());
+#endif
 
     // allocate the motors class
     allocate_motors();

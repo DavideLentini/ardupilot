@@ -102,8 +102,10 @@ void ModeCircle::run()
     // set motors to full range
     motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
+#if AP_RANGEFINDER_ENABLED
     // update the vertical offset based on the surface measurement
     copter.surface_tracking.update_surface_offset();
+#endif
 
     copter.failsafe_terrain_set_status(copter.circle_nav->update(target_climb_rate));
 
