@@ -1051,6 +1051,7 @@ void NavEKF3_core::FuseVelPosNED()
 // select the height measurement to be fused from the available baro, range finder and GPS sources
 void NavEKF3_core::selectHeightForFusion()
 {
+#if AP_RANGEFINDER_ENABLED
     // Read range finder data and check for new data in the buffer
     // This data is used by both height and optical flow fusion processing
     readRangeFinder();
@@ -1070,6 +1071,7 @@ void NavEKF3_core::selectHeightForFusion()
             }
         }
     }
+#endif  // AP_RANGEFINDER_ENABLED
 
     // read baro height data from the sensor and check for new data in the buffer
     readBaroData();
@@ -1080,9 +1082,15 @@ void NavEKF3_core::selectHeightForFusion()
     const bool extNavDataIsFresh = (imuSampleTime_ms - extNavMeasTime_ms < 500);
 #endif
     // select height source
-    if ((frontend->sources.getPosZSource() == AP_NavEKF_Source::SourceZ::RANGEFINDER) && _rng && rangeFinderDataIsFresh) {
+#if AP_RANGEFINDER_ENABLED
+    const bool use_rangefinder_as_source = (frontend->sources.getPosZSource() == AP_NavEKF_Source::SourceZ::RANGEFINDER) && _rng && rangeFinderDataIsFresh;
+#else
+    const bool use_rangefinder_as_source = false;
+#endif
+    if (use_rangefinder_as_source) {
         // user has specified the range finder as a primary height source
         activeHgtSource = AP_NavEKF_Source::SourceZ::RANGEFINDER;
+#if AP_RANGEFINDER_ENABLED
     } else if ((frontend->_useRngSwHgt > 0) && ((frontend->sources.getPosZSource() == AP_NavEKF_Source::SourceZ::BARO) || (frontend->sources.getPosZSource() == AP_NavEKF_Source::SourceZ::GPS)) && _rng && rangeFinderDataIsFresh) {
         // determine if we are above or below the height switch region
         ftype rangeMaxUse = 1e-4 * (ftype)_rng->max_distance_cm_orient(ROTATION_PITCH_270) * (ftype)frontend->_useRngSwHgt;
@@ -1121,6 +1129,7 @@ void NavEKF3_core::selectHeightForFusion()
             // reliable terrain and range finder so start using range finder height
             activeHgtSource = AP_NavEKF_Source::SourceZ::RANGEFINDER;
         }
+#endif
     } else if (frontend->sources.getPosZSource() == AP_NavEKF_Source::SourceZ::BARO) {
         activeHgtSource = AP_NavEKF_Source::SourceZ::BARO;
     } else if ((frontend->sources.getPosZSource() == AP_NavEKF_Source::SourceZ::GPS) && ((imuSampleTime_ms - lastTimeGpsReceived_ms) < 500) && validOrigin && gpsAccuracyGood) {

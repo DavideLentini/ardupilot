@@ -131,10 +131,12 @@ bool NavEKF3_core::setup_core(uint8_t _imu_index, uint8_t _core_index)
     if(frontend->sources.gps_yaw_enabled() && !storedYawAng.init(obs_buffer_length)) {
         return false;
     }
+#if AP_RANGEFINDER_ENABLED
     // Note: the use of dual range finders potentially doubles the amount of data to be stored
     if(dal.rangefinder() && !storedRange.init(MIN(2*obs_buffer_length , imu_buffer_length))) {
         return false;
     }
+#endif
     // Note: range beacon data is read one beacon at a time and can arrive at a high rate
     if(dal.beacon() && !storedRangeBeacon.init(imu_buffer_length+1)) {
         return false;
