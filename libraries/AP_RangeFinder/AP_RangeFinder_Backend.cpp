@@ -18,6 +18,8 @@
 #include "AP_RangeFinder.h"
 #include "AP_RangeFinder_Backend.h"
 
+#if AP_RANGEFINDER_ENABLED
+
 extern const AP_HAL::HAL& hal;
 
 /*
@@ -80,3 +82,4 @@ void AP_RangeFinder_Backend::set_status(RangeFinder::Status _status)
     }
 }
 
+#endif  // AP_RANGEFINDER_ENABLED

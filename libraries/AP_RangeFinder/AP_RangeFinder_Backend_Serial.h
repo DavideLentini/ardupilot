@@ -2,6 +2,8 @@
 
 #include "AP_RangeFinder_Backend.h"
 
+#if AP_RANGEFINDER_ENABLED
+
 class AP_RangeFinder_Backend_Serial : public AP_RangeFinder_Backend
 {
 public:
@@ -32,3 +34,5 @@ protected:
     // maximum time between readings before we change state to NoData:
     virtual uint16_t read_timeout_ms() const { return 200; }
 };
+
+#endif  // AP_RANGEFINDER_ENABLED

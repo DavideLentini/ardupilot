@@ -14,10 +14,13 @@
  */
 #pragma once
 
+#include "AP_RangeFinder.h"
+
+#if AP_RANGEFINDER_ENABLED
+
 #include <AP_Common/AP_Common.h>
 #include <AP_HAL/AP_HAL_Boards.h>
 #include <AP_HAL/Semaphores.h>
-#include "AP_RangeFinder.h"
 
 class AP_RangeFinder_Backend
 {
@@ -92,3 +95,5 @@ protected:
 
     virtual MAV_DISTANCE_SENSOR _get_mav_distance_sensor_type() const = 0;
 };
+
+#endif  // AP_RANGEFINDER_ENABLED

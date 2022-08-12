@@ -13,8 +13,11 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <AP_HAL/AP_HAL.h>
 #include "AP_RangeFinder_Backend_Serial.h"
+
+#if AP_RANGEFINDER_ENABLED
+
+#include <AP_HAL/AP_HAL.h>
 #include <AP_SerialManager/AP_SerialManager.h>
 
 #include <ctype.h>
@@ -60,3 +63,5 @@ void AP_RangeFinder_Backend_Serial::update(void)
         set_status(RangeFinder::Status::NoData);
     }
 }
+
+#endif  // AP_RANGEFINDER_ENABLED

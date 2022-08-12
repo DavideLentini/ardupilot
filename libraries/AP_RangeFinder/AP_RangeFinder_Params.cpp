@@ -1,6 +1,8 @@
 #include "AP_RangeFinder_Params.h"
 #include "AP_RangeFinder.h"
 
+#if AP_RANGEFINDER_ENABLED
+
 #ifndef AP_RANGEFINDER_DEFAULT_ORIENTATION
 #ifndef HAL_BUILD_AP_PERIPH
 #define AP_RANGEFINDER_DEFAULT_ORIENTATION ROTATION_PITCH_270
@@ -144,3 +146,5 @@ const AP_Param::GroupInfo AP_RangeFinder_Params::var_info[] = {
 AP_RangeFinder_Params::AP_RangeFinder_Params(void) {
     AP_Param::setup_object_defaults(this, var_info);
 }
+
+#endif  // AP_RANGEFINDER_ENABLED
