@@ -545,7 +545,7 @@ def run_step(step):
         global tester
         tester = tester_class_map[step](binary, **fly_opts)
         # run the test and return its result and the tester itself
-        return (tester.autotest(), tester)
+        return (tester.autotest(parallel=opts.parallel), tester)
 
     # handle "test.Copter.CPUFailsafe" etc:
     specific_test_to_run = find_specific_test_to_run(step)
@@ -893,6 +893,10 @@ if __name__ == "__main__":
                       default=None,
                       type='int',
                       help='maximum runtime in seconds')
+    parser.add_option("--parallel",
+                      default=1,
+                      type='int',
+                      help='number of tests to run in parallel')
     parser.add_option("--frame",
                       type='string',
                       default=None,

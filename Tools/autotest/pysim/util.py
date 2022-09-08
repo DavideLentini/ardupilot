@@ -405,7 +405,9 @@ def start_SITL(binary,
                customisations=[],
                lldb=False,
                enable_fgview_output=False,
-               supplementary=False):
+               supplementary=False,
+               instance=0,
+               ):
 
     if model is None and not supplementary:
         raise ValueError("model must not be None")
@@ -481,6 +483,8 @@ def start_SITL(binary,
             raise RuntimeError("DISPLAY was not set")
 
     cmd.append(binary)
+    cmd.extend(['-I', str(instance)])
+
     if not supplementary:
         if wipe:
             cmd.append('-w')
@@ -587,11 +591,16 @@ def MAVProxy_version():
 def start_MAVProxy_SITL(atype,
                         aircraft=None,
                         setup=False,
-                        master='tcp:127.0.0.1:5762',
+                        master=None,
                         options=[],
                         pexpect_timeout=60,
-                        logfile=sys.stdout):
+                        logfile=sys.stdout,
+                        instance=0):
     """Launch mavproxy connected to a SITL instance."""
+    if master is None:
+        port = 5762 + instance * 10
+        master = 'tcp:127.0.0.1:%u' % port
+
     local_mp_modules_dir = os.path.abspath(
         os.path.join(__file__, '..', '..', '..', 'mavproxy_modules'))
     env = dict(os.environ)

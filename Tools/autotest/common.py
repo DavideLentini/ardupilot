@@ -21,6 +21,7 @@ import traceback
 import pexpect
 import fnmatch
 import operator
+import queue
 import numpy
 import socket
 import struct
@@ -28,6 +29,7 @@ import random
 import tempfile
 import threading
 import enum
+import multiprocessing
 
 from MAVProxy.modules.lib import mp_util
 from MAVProxy.modules.lib import mp_elevation
@@ -1575,6 +1577,7 @@ class AutoTest(ABC):
             offline=self.terrain_in_offline_mode
         )
         self.terrain_data_messages_sent = 0  # count of messages back
+        self.instance = 0
 
     def __del__(self):
         if self.rc_thread is not None:
@@ -1646,12 +1649,15 @@ class AutoTest(ABC):
         return 10
 
     def autotest_connection_string_to_ardupilot(self):
-        return "tcp:127.0.0.1:5760"
+        # 10 is a magic number embedded in ArduPilot
+        port = 5760 + self.instance * 10
+        return "tcp:127.0.0.1:%u" % port
 
     def mavproxy_options(self):
         """Returns options to be passed to MAVProxy."""
+        sitl_rc_port = 5502 + 10 * self.instance
         ret = [
-            '--sitl=127.0.0.1:5502',
+            '--sitl=127.0.0.1:%u' % sitl_rc_port,
             '--streamrate=%u' % self.sitl_streamrate(),
             '--target-system=%u' % self.sysid_thismav(),
             '--target-component=1',
@@ -4361,7 +4367,8 @@ class AutoTest(ABC):
     def rc_thread_main(self):
         chan16 = [1000] * 16
 
-        sitl_output = mavutil.mavudp("127.0.0.1:5501", input=False)
+        sitl_rc_port = 5501 + 10 * self.instance
+        sitl_output = mavutil.mavudp("127.0.0.1:%u" % sitl_rc_port, input=False)
         buf = None
 
         while True:
@@ -7213,7 +7220,9 @@ Also, ignores heartbeats not from our target system'''
         '''called by run_one_test to actually run the test in a retry loop'''
         name = test.name
         desc = test.description
-        test_function = test.function
+        test_function = getattr(test, "function", None)
+        if test_function is None:
+            test_function = getattr(self, test.name)
         if attempt != 1:
             self.progress("RETRYING %s" % name)
             test_output_filename = self.buildlogs_path("%s-%s-retry-%u.txt" %
@@ -7412,7 +7421,9 @@ Also, ignores heartbeats not from our target system'''
             self.vehicleinfo_key(),
             logfile=self.mavproxy_logfile,
             options=self.mavproxy_options(),
-            pexpect_timeout=pexpect_timeout)
+            pexpect_timeout=pexpect_timeout,
+            instance=self.instance
+        )
         mavproxy.expect(r'Telemetry log: (\S+)\r\n')
         self.logfile = mavproxy.match.group(1)
         self.progress("LOGFILE %s" % self.logfile)
@@ -7444,6 +7455,7 @@ Also, ignores heartbeats not from our target system'''
             "valgrind": self.valgrind,
             "callgrind": self.callgrind,
             "wipe": True,
+            "instance": self.instance,
         }
         start_sitl_args.update(**sitl_args)
         if ("defaults_filepath" not in start_sitl_args or
@@ -10465,11 +10477,114 @@ switch value'''
         if not self.current_onboard_log_contains_message(messagetype):
             raise NotAchievedException("Current onboard log does not contain message %s" % messagetype)
 
+    def run_tests_parallel(self, tests, parallel=1):
+
+        # prepare tests queue
+        test_queue = multiprocessing.Queue()
+        result_queue = multiprocessing.Queue()
+
+        # tests = tests[:4]
+        for test in tests:
+            print("name=%s" % str(test.name))
+            print("Putting (%s)" % str(test))
+            delattr(test, "function")
+            test_queue.put(test)
+
+        # start processes
+        self.threads = []
+        for i in range(parallel):
+            t = multiprocessing.Process(
+                target=self.test_runner_thread_main,
+                name='TestRunner-%u' % i,
+                args=(
+                    test_queue,
+                    result_queue,
+                    i
+                )
+            )
+            if t is None:
+                raise NotAchievedException("Could not create thread %u" % i)
+            t.start()
+
+        results = []
+        while True:
+            remaining = test_queue.qsize()
+            if remaining == 0:
+                break
+            while True:
+                try:
+                    result = result_queue.get(block=False)
+                    self.progress("Received result (%s)" % str(result))
+                    results.append(result)
+                except queue.Empty:
+                    break
+
+            self.progress("Base thread waiting (%u tests remaining)" %
+                          (remaining, ))
+            time.sleep(1)
+
+        while len(results) != len(tests):
+            try:
+                result = result_queue.get(block=False)
+                self.progress("Received result (%s)" % str(result))
+                results.append(result)
+            except queue.Empty:
+                pass
+            time.sleep(1)
+            self.progress("run_tests_parallel waiting for final results (want=%u) (got=%u)" %
+                          (len(tests), len(results)))
+
+        self.progress("run_tests_parallel returning success")
+
+        return results
+
+    def test_runner_thread_main(self, test_queue, result_queue, instance):
+        self.instance = instance
+
+        try:
+            self.init()
+
+            self.progress("Waiting for a heartbeat with mavlink protocol %s"
+                          % self.mav.WIRE_PROTOCOL_VERSION)
+            self.wait_heartbeat()
+            self.wait_for_initial_mode()
+            self.progress("Setting up RC parameters")
+            self.set_rc_default()
+            self.wait_for_mode_switch_poll()
+            if not self.is_tracker(): # FIXME - more to the point, fix Tracker's mission handling
+                self.clear_mission(mavutil.mavlink.MAV_MISSION_TYPE_ALL)
+
+            while True:
+                try:
+                    test = test_queue.get(block=False)
+                except queue.Empty:
+                    break
+                self.drain_mav_unparsed()
+                self.progress("TestRunner-%u: running test (%s)" %
+                              (instance, test.name))
+                result = self.run_one_test(test)
+                result_queue.put(result)
+#                result_queue.put((desc, "Fred", debug_filename))
+
+        except pexpect.TIMEOUT:
+            self.progress("Failed with timeout")
+            result = Result(test)
+            result.passed = False
+            result.reason = "Failed with timeout"
+            result_queue.add(result)
+            if self.logs_dir:
+                if glob.glob("core*") or glob.glob("ap-*.core"):
+                    self.check_logs("FRAMEWORK")
+
+        if self.rc_thread is not None:
+            self.progress("Joining RC thread")
+            self.rc_thread_should_quit = True
+            self.rc_thread.join()
+            self.rc_thread = None
+        self.close()
+
     def run_tests(self, tests):
         """Autotest vehicle in SITL."""
-        if self.run_tests_called:
-            raise ValueError("run_tests called twice")
-        self.run_tests_called = True
 
         result_list = []
 
@@ -12560,7 +12675,7 @@ SERIAL5_BAUD 128
             print("Had to force-reset SITL %u times" %
                   (self.forced_post_test_sitl_reboots,))
 
-    def autotest(self, tests=None, allow_skips=True):
+    def autotest(self, parallel=1, tests=None, allow_skips=True):
         """Autotest used by ArduPilot autotest CI."""
         if tests is None:
             tests = self.tests()
@@ -12582,7 +12697,12 @@ SERIAL5_BAUD 128
                 continue
             tests.append(test)
 
-        results = self.run_tests(tests)
+        if parallel != 1:
+            # we preserve non-parallel behaviour to avoid fighting on
+            # e.g. Windows and MacOSX:
+            results = self.run_tests_parallel(tests, parallel=parallel)
+        else:
+            results = self.run_tests(tests)
 
         if len(skip_list):
             self.progress("Skipped tests:")
