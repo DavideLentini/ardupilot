@@ -201,7 +201,8 @@ class Context(object):
 
 # https://stackoverflow.com/questions/616645/how-do-i-duplicate-sys-stdout-to-a-log-file-in-python
 class TeeBoth(object):
-    def __init__(self, name, mode, mavproxy_logfile):
+    def __init__(self, name, mode, mavproxy_logfile, suppress_stdout=False):
+        self.suppress_stdout = suppress_stdout
         self.file = open(name, mode)
         self.stdout = sys.stdout
         self.stderr = sys.stderr
@@ -1445,6 +1446,7 @@ class Test(object):
         self.function = function
         self.attempts = attempts
         self.speedup = speedup
+        self.instance = 0
 
 
 class Result(object):
@@ -7192,14 +7194,14 @@ Also, ignores heartbeats not from our target system'''
             util.run_cmd('/bin/cp build/sitl/bin/* %s' % to_dir,
                          directory=util.reltopdir('.'))
 
-    def run_one_test(self, test, interact=False):
+    def run_one_test(self, test, interact=False, suppress_stdout=False):
         '''new-style run-one-test used by run_tests'''
         for i in range(0, test.attempts-1):
-            result = self.run_one_test_attempt(test, interact=interact, attempt=i+2)
+            result = self.run_one_test_attempt(test, interact=interact, attempt=i+2, suppress_stdout=suppress_stdout)
             if result.passed:
                 return result
             self.progress("Run attempt failed.  Retrying")
-        return self.run_one_test_attempt(test, interact=interact, attempt=1)
+        return self.run_one_test_attempt(test, interact=interact, attempt=1, suppress_stdout=suppress_stdout)
 
     def print_exception_caught(self, e, send_statustext=True):
         self.progress("Exception caught: %s" %
@@ -7216,7 +7218,7 @@ Also, ignores heartbeats not from our target system'''
             for line in f:
                 self.progress(line.rstrip())
 
-    def run_one_test_attempt(self, test, interact=False, attempt=1):
+    def run_one_test_attempt(self, test, interact=False, attempt=1, suppress_stdout=False):
         '''called by run_one_test to actually run the test in a retry loop'''
         name = test.name
         desc = test.description
@@ -7231,7 +7233,7 @@ Also, ignores heartbeats not from our target system'''
             test_output_filename = self.buildlogs_path("%s-%s.txt" %
                                                        (self.log_name(), name))
 
-        tee = TeeBoth(test_output_filename, 'w', self.mavproxy_logfile)
+        tee = TeeBoth(test_output_filename, 'w', self.mavproxy_logfile, suppress_stdout=suppress_stdout)
 
         start_message_hooks = self.mav.message_hooks
 
@@ -10562,7 +10564,7 @@ switch value'''
                 self.drain_mav_unparsed()
                 self.progress("TestRunner-%u: running test (%s)" %
                               (instance, test.name))
-                result = self.run_one_test(test)
+                result = self.run_one_test(test, suppress_stdout=True)
                 result_queue.put(result)
 #                result_queue.put((desc, "Fred", debug_filename))
 
@@ -10910,9 +10912,10 @@ switch value'''
         '''Test AHRS NMEA Output can be read by out NMEA GPS'''
         self.set_parameter("SERIAL5_PROTOCOL", 20) # serial5 is NMEA output
         self.set_parameter("GPS_TYPE2", 5) # GPS2 is NMEA
+        port = 6735 + self.instance * 10
         self.customise_SITL_commandline([
-            "--uartE=tcp:6735", # GPS2 is NMEA....
-            "--uartF=tcpclient:127.0.0.1:6735", # serial5 spews to localhost:6735
+            "--uartE=tcp:%u" % port, # GPS2 is NMEA....
+            "--uartF=tcpclient:127.0.0.1:%u" % port, # serial5 spews to localhost:6735
         ])
         self.do_timesync_roundtrip()
         self.wait_gps_fix_type_gte(3)
@@ -11519,10 +11522,11 @@ switch value'''
             "RPM1_TYPE": 10, # enable RPM output
             "TERRAIN_ENABLE": 0,
         })
+        port = 6735 + self.instance * 10
         self.customise_SITL_commandline([
-            "--uartF=tcp:6735" # serial5 spews to localhost:6735
+            "--uartF=tcp:%u" % port # serial5 spews to localhost:6735
         ])
-        frsky = FRSkyPassThrough(("127.0.0.1", 6735),
+        frsky = FRSkyPassThrough(("127.0.0.1", port),
                                  get_time=self.get_sim_time_cached)
 
         # waiting until we are ready to arm should ensure our wanted
@@ -11609,10 +11613,11 @@ switch value'''
             "SERIAL5_PROTOCOL": 10, # serial5 is FRSky passthrough
             "RPM1_TYPE": 10, # enable RPM output
         })
+        port = 6735 + self.instance * 10
         self.customise_SITL_commandline([
-            "--uartF=tcp:6735" # serial5 spews to localhost:6735
+            "--uartF=tcp:%u" % port # serial5 spews to localhost:6735
         ])
-        frsky = FRSkyPassThrough(("127.0.0.1", 6735),
+        frsky = FRSkyPassThrough(("127.0.0.1", port),
                                  get_time=self.get_sim_time_cached)
 
         self.wait_ready_to_arm()
@@ -11763,10 +11768,11 @@ switch value'''
     def FRSkyMAVlite(self):
         '''Test FrSky MAVlite serial output'''
         self.set_parameter("SERIAL5_PROTOCOL", 10) # serial5 is FRSky passthrough
+        port = 6735 + self.instance * 10
         self.customise_SITL_commandline([
-            "--uartF=tcp:6735" # serial5 spews to localhost:6735
+            "--uartF=tcp:%u" % port # serial5 spews to localhost:6735
         ])
-        frsky = FRSkyPassThrough(("127.0.0.1", 6735))
+        frsky = FRSkyPassThrough(("127.0.0.1", port))
         frsky.connect()
 
         sport_to_mavlite = SPortToMAVlite()
@@ -12037,10 +12043,11 @@ switch value'''
         '''Test FrSky SPort mode'''
         self.set_parameter("SERIAL5_PROTOCOL", 4) # serial5 is FRSky sport
         self.set_parameter("RPM1_TYPE", 10) # enable SITL RPM sensor
+        port = 6735 + self.instance * 10
         self.customise_SITL_commandline([
-            "--uartF=tcp:6735" # serial5 spews to localhost:6735
+            "--uartF=tcp:%u" % port # serial5 spews to localhost:6735
         ])
-        frsky = FRSkySPort(("127.0.0.1", 6735), verbose=True)
+        frsky = FRSkySPort(("127.0.0.1", port), verbose=True)
         self.wait_ready_to_arm()
 
         # we need to start the engine to get some RPM readings, we do it for plane only
@@ -12109,10 +12116,11 @@ switch value'''
     def FRSkyD(self):
         '''Test FrSkyD serial output'''
         self.set_parameter("SERIAL5_PROTOCOL", 3) # serial5 is FRSky output
+        port = 6735 + self.instance * 10
         self.customise_SITL_commandline([
-            "--uartF=tcp:6735" # serial5 spews to localhost:6735
+            "--uartF=tcp:%u" % port # serial5 spews to localhost:6735
         ])
-        frsky = FRSkyD(("127.0.0.1", 6735))
+        frsky = FRSkyD(("127.0.0.1", port))
         self.wait_ready_to_arm()
         m = self.assert_receive_message('GLOBAL_POSITION_INT', timeout=1)
         gpi_abs_alt = int((m.alt+500) / 1000) # mm -> m
@@ -12231,10 +12239,11 @@ switch value'''
     def LTM(self):
         '''Test LTM serial output'''
         self.set_parameter("SERIAL5_PROTOCOL", 25) # serial5 is LTM output
+        port = 6735 + self.instance * 10
         self.customise_SITL_commandline([
-            "--uartF=tcp:6735" # serial5 spews to localhost:6735
+            "--uartF=tcp:%u" # serial5 spews to localhost:6735
         ])
-        ltm = LTM(("127.0.0.1", 6735))
+        ltm = LTM(("127.0.0.1", port))
         self.wait_ready_to_arm()
 
         wants = {
@@ -12273,10 +12282,11 @@ switch value'''
         '''Test DEVO serial output'''
         self.context_push()
         self.set_parameter("SERIAL5_PROTOCOL", 17) # serial5 is DEVO output
+        port = 6735 + self.instance * 10
         self.customise_SITL_commandline([
-            "--uartF=tcp:6735" # serial5 spews to localhost:6735
+            "--uartF=tcp:%u" # serial5 spews to localhost:6735
         ])
-        devo = DEVO(("127.0.0.1", 6735))
+        devo = DEVO(("127.0.0.1", port))
         self.wait_ready_to_arm()
         m = self.assert_receive_message('GLOBAL_POSITION_INT', timeout=1)
 
@@ -12345,10 +12355,11 @@ switch value'''
         '''Test MSP DJI serial output'''
         self.set_parameter("SERIAL5_PROTOCOL", 33) # serial5 is MSP DJI output
         self.set_parameter("MSP_OPTIONS", 1) # telemetry (unpolled) mode
+        port = 6735 + self.instance * 10
         self.customise_SITL_commandline([
-            "--uartF=tcp:6735" # serial5 spews to localhost:6735
+            "--uartF=tcp:%u" % port # serial5 spews to localhost:6735
         ])
-        msp = MSP_DJI(("127.0.0.1", 6735))
+        msp = MSP_DJI(("127.0.0.1", port))
         self.wait_ready_to_arm()
 
         tstart = self.get_sim_time()
@@ -12372,10 +12383,11 @@ switch value'''
         ex = None
         try:
             self.set_parameter("SERIAL5_PROTOCOL", 23) # serial5 is RCIN input
+            port = 6735 + self.instance * 10
             self.customise_SITL_commandline([
-                "--uartF=tcp:6735" # serial5 reads from to localhost:6735
+                "--uartF=tcp:%u" % port # serial5 reads from to localhost:6735
             ])
-            crsf = CRSF(("127.0.0.1", 6735))
+            crsf = CRSF(("127.0.0.1", port))
             crsf.connect()
 
             self.progress("Writing vtx_frame")
@@ -12683,6 +12695,7 @@ SERIAL5_BAUD 128
         for test in tests:
             if type(test) != Test:
                 test = Test(test)
+                test.instance = self.instance
             all_tests.append(test)
 
         disabled = self.disabled_tests()
