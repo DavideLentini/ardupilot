@@ -3007,8 +3007,9 @@ class AutoTest(ABC):
 
             self.reboot_sitl()
 
+            port = 5763 + 10 * self.instance
             mav2 = mavutil.mavlink_connection(
-                "tcp:localhost:5763",
+                "tcp:localhost:%u" % port,
                 robust_parsing=True,
                 source_system=7,
                 source_component=7,
