@@ -221,7 +221,8 @@ class TeeBoth(object):
 
     def write(self, data):
         self.file.write(data)
-        self.stdout.write(data)
+        if not self.suppress_stdout:
+            self.stdout.write(data)
 
     def flush(self):
         self.file.flush()
@@ -3447,7 +3448,10 @@ class AutoTest(ABC):
 
     def log_list(self):
         '''return a list of log files present in POSIX-style loging dir'''
-        ret = sorted(glob.glob("logs/00*.BIN"))
+        if self.instance != 0:
+            ret = sorted(glob.glob("logs-%u/00*.BIN" % self.instance))
+        else:
+            ret = sorted(glob.glob("logs/00*.BIN"))
         self.progress("log list: %s" % str(ret))
         return ret
 
@@ -7219,6 +7223,31 @@ Also, ignores heartbeats not from our target system'''
             for line in f:
                 self.progress(line.rstrip())
 
+    def dump_process_status(self, result):
+        '''used to show where the SITL process is upto.  Often caused when
+        we've lost contact'''
+
+        if self.sitl.isalive():
+            self.progress("pexpect says it is alive")
+            for tool in "dumpstack.sh", "dumpcore.sh":
+                tool_filepath = os.path.join(self.rootdir(), 'Tools', 'scripts', tool)
+                if util.run_cmd([tool_filepath, str(self.sitl.pid)]) != 0:
+                    reason = "Failed %s" % (tool,)
+                    self.progress(reason)
+                    result.reason = reason
+                    result.passed = False
+                    return
+        else:
+            self.progress("pexpect says it is dead")
+
+        # try dumping the process status file for more information:
+        status_filepath = "/proc/%u/status" % self.sitl.pid
+        self.progress("Checking for status filepath (%s)" % status_filepath)
+        if os.path.exists(status_filepath):
+            self.progress_file_content(status_filepath)
+        else:
+            self.progress("... does not exist")
+
     def run_one_test_attempt(self, test, interact=False, attempt=1, suppress_stdout=False):
         '''called by run_one_test to actually run the test in a retry loop'''
         name = test.name
@@ -7296,25 +7325,7 @@ Also, ignores heartbeats not from our target system'''
         except Exception:
             # process is dead
             self.progress("No heartbeat after test", send_statustext=False)
-            if self.sitl.isalive():
-                self.progress("pexpect says it is alive")
-                for tool in "dumpstack.sh", "dumpcore.sh":
-                    tool_filepath = os.path.join(self.rootdir(), 'Tools', 'scripts', tool)
-                    if util.run_cmd([tool_filepath, str(self.sitl.pid)]) != 0:
-                        self.progress("Failed %s" % (tool,))
-                        result.description
-                        result.passed = False
-                        return result
-            else:
-                self.progress("pexpect says it is dead")
-
-            # try dumping the process status file for more information:
-            status_filepath = "/proc/%u/status" % self.sitl.pid
-            self.progress("Checking for status filepath (%s)" % status_filepath)
-            if os.path.exists(status_filepath):
-                self.progress_file_content(status_filepath)
-            else:
-                self.progress("... does not exist")
+            self.dump_process_status(result)
 
             passed = False
             reset_needed = True
@@ -7397,8 +7408,19 @@ Also, ignores heartbeats not from our target system'''
             self.reset_SITL_commandline()
 
         if not self.is_tracker(): # FIXME - more to the point, fix Tracker's mission handling
-            self.clear_mission(mavutil.mavlink.MAV_MISSION_TYPE_ALL)
-            self.set_current_waypoint(0, check_afterwards=False)
+            try:
+                self.clear_mission(mavutil.mavlink.MAV_MISSION_TYPE_ALL)
+                self.set_current_waypoint(0, check_afterwards=False)
+            except Exception as ex:
+                self.progress("Exception clearing mission")
+                self.print_exception_caught(ex)
+                try:
+                    self.wait_heartbeat()
+                except AutoTestTimeoutException:
+                    self.progress("No heartbeat received")
+                self.dump_process_status(result)
+                passed = False
+                self.reset_SITL_commandline()
 
         tee.close()
 
@@ -10495,7 +10517,7 @@ switch value'''
 
         # start processes
         self.threads = []
-        for i in range(parallel):
+        for i in range(min([parallel, len(tests)])):
             t = multiprocessing.Process(
                 target=self.test_runner_thread_main,
                 name='TestRunner-%u' % i,
@@ -10509,6 +10531,7 @@ switch value'''
                 raise NotAchievedException("Could not create thread %u" % i)
             t.start()
 
+        outstanding_results = set([x.name for x in tests])
         results = []
         while True:
             remaining = test_queue.qsize()
@@ -10519,6 +10542,7 @@ switch value'''
                     result = result_queue.get(block=False)
                     self.progress("Received result (%s)" % str(result))
                     results.append(result)
+                    outstanding_results.remove(result.test.name)
                 except queue.Empty:
                     break
 
@@ -10531,11 +10555,15 @@ switch value'''
                 result = result_queue.get(block=False)
                 self.progress("Received result (%s)" % str(result))
                 results.append(result)
+                outstanding_results.remove(result.test.name)
             except queue.Empty:
                 pass
             time.sleep(1)
             self.progress("run_tests_parallel waiting for final results (want=%u) (got=%u)" %
                           (len(tests), len(results)))
+            if len(outstanding_results) < 5:
+                for t in outstanding_results:
+                    self.progress("   Where are you %s?" % t)
 
         self.progress("run_tests_parallel returning success")
 
