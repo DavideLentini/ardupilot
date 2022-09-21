@@ -35,6 +35,8 @@
 #include <AP_Math/AP_Math.h>
 #include <RC_Channel/RC_Channel.h>
 
+#include <AP_Vehicle/AP_Vehicle_Type.h>
+
 extern const AP_HAL::HAL& hal;
 
 void AP_RCProtocol::init()
