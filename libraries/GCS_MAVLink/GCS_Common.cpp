@@ -5016,15 +5016,17 @@ bool GCS_MAVLINK::try_send_mission_message_checksum()
 {
     static const MAV_MISSION_TYPE to_send[] {
         MAV_MISSION_TYPE_MISSION,
-        MAV_MISSION_TYPE_RALLY,
-        MAV_MISSION_TYPE_FENCE,
+        // MAV_MISSION_TYPE_RALLY,
+        // MAV_MISSION_TYPE_FENCE,
     };
     for (auto type : to_send) {
         MissionItemProtocol *prot = gcs().get_prot_for_mission_type(type);
         if (prot == nullptr) {
             continue;
         }
-        prot->send_mission_checksum_message(*this);
+        if (!prot->send_mission_checksum_message(*this)) {
+            return false;
+        }
     }
     return true;
 }

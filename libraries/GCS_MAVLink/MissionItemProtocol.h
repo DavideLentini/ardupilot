@@ -53,7 +53,7 @@ public:
                                   const mavlink_message_t &msg);
 
     void queued_request_send();
-    void update();
+    virtual void update();
 
     bool active_link_is(const GCS_MAVLINK *_link) const { return _link == link; };
 
@@ -77,6 +77,21 @@ protected:
     virtual bool clear_all_items() = 0;
 
     uint16_t        request_last; // last request index
+
+    enum class ChecksumState : uint8_t {
+        READY,
+        CALCULATING,
+        ERROR,
+    };
+    struct {
+        ChecksumState state;
+        uint16_t count;
+        uint16_t current_waypoint;
+        uint32_t last_change_time_ms;
+        uint32_t last_calculate_time_ms;
+        uint32_t mission_change_time_ms;
+        uint32_t checksum;
+    } checksum_state;
 
 private:
 

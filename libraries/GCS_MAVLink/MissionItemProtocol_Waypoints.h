@@ -25,6 +25,9 @@ public:
     // can't truncate-to a longer list)
     void truncate(const mavlink_mission_count_t &packet) override;
 
+    // periodic updates, e.g. update checksum
+    void update() override;
+
 protected:
 
     // clear_all_items() is called to clear all items on the vehicle

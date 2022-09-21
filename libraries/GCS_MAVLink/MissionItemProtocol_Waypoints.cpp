@@ -142,20 +142,82 @@ void MissionItemProtocol_Waypoints::truncate(const mavlink_mission_count_t &pack
 
 bool MissionItemProtocol_Waypoints::checksum_for_mission_checksum_message(uint32_t &checksum)
 {
-    // caching stuff goes here.
-
-    checksum = 0;
-    const uint16_t count = mission.num_commands();
-    for (uint16_t i=1; i<count; i++) {
-        AP_Mission::Mission_Command cmd;
-        if (!mission.read_cmd_from_storage(i, cmd)) {
+    WITH_SEMAPHORE(mission.get_semaphore());
+    switch (checksum_state.state) {
+    case ChecksumState::READY:
+        if (mission.last_change_time_ms() != checksum_state.mission_change_time_ms) {
             return false;
+        }
+        checksum = checksum_state.checksum;
+        return true;
+    case ChecksumState::CALCULATING:
+    case ChecksumState::ERROR:
+        return false;
+    }
+    return false;
+}
+
+void MissionItemProtocol_Waypoints::update()
+{
+    // update the checksum if required:
+
+    WITH_SEMAPHORE(mission.get_semaphore());
+
+    const uint32_t mission_last_change_time_ms = mission.last_change_time_ms();
+
+    if (mission_last_change_time_ms == checksum_state.last_calculate_time_ms) {
+        return;
+    }
+
+    // decide whether we need to start calculating the checksum from
+    // the start; we may be partially through the calculation and need
+    // to start again
+    bool do_initialisation = false;
+    switch (checksum_state.state) {
+    case ChecksumState::READY:
+        do_initialisation = true;
+        break;
+    case ChecksumState::CALCULATING:
+        if (checksum_state.mission_change_time_ms != mission_last_change_time_ms) {
+            // mission changed part-way through our calculations
+            do_initialisation = true;
+        }
+        break;
+    case ChecksumState::ERROR:
+        do_initialisation = true;
+        break;
+    }
+
+    if (do_initialisation) {
+        checksum_state.state = ChecksumState::CALCULATING;
+        checksum_state.checksum = 0;
+        checksum_state.current_waypoint = 1;
+        checksum_state.count = mission.num_commands();
+        checksum_state.mission_change_time_ms = mission_last_change_time_ms;
+    }
+
+    const uint32_t now_ms = AP_HAL::millis();
+    if (now_ms - mission.last_change_time_ms() < 500) {
+        // don't start to calculate unless the mission's been
+        // unchanged for a while.
+        return;
+    }
+
+    // AP: Took 2.178000ms to checksum 373 points (5.839142ms/1000 points
+    for (uint16_t count = 0;
+         count<16 && checksum_state.current_waypoint<checksum_state.count;
+         count++, checksum_state.current_waypoint++) {
+        AP_Mission::Mission_Command cmd;
+        if (!mission.read_cmd_from_storage(checksum_state.current_waypoint, cmd)) {
+            checksum_state.state = ChecksumState::ERROR;
+            return;
         }
         mavlink_mission_item_int_t ret_packet;
         if (!AP_Mission::mission_cmd_to_mavlink_int(cmd, ret_packet)) {
-            return MAV_MISSION_ERROR;
+            checksum_state.state = ChecksumState::ERROR;
+            return;
         }
-#define ADD_TO_CHECKSUM(field) checksum = crc_crc32(checksum, (uint8_t*)&ret_packet.field, sizeof(ret_packet.field));
+#define ADD_TO_CHECKSUM(field) checksum_state.checksum = crc_crc32(checksum_state.checksum, (uint8_t*)&ret_packet.field, sizeof(ret_packet.field));
         ADD_TO_CHECKSUM(frame);
         ADD_TO_CHECKSUM(command);
         ADD_TO_CHECKSUM(autocontinue);
@@ -168,6 +230,14 @@ bool MissionItemProtocol_Waypoints::checksum_for_mission_checksum_message(uint32
         ADD_TO_CHECKSUM(z);
 #undef ADD_TO_CHECKSUM
     }
-    return checksum;
-}
 
+    if (checksum_state.current_waypoint<checksum_state.count) {
+        return;
+    }
+
+    checksum_state.state = ChecksumState::READY;
+    checksum_state.last_calculate_time_ms = mission_last_change_time_ms;
+    // any time the checksum changes we want to emit the
+    // MISSION_CHECKSUM message, so queue a send of it:
+    gcs().send_message(MSG_MISSION_CHECKSUM);
+}
