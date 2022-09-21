@@ -1751,12 +1751,15 @@ class AutoTestPlane(AutoTest):
         else:
             raise NotAchievedException("Fault Sensor Re-Enabled")
         # simulate the effect of blockage fully clearing
+        self.context_push()
+        self.install_messageprinter_handlers_context(set(['PARAM_VALUE']))
         self.set_parameter("ARSPD_RATIO", 2.0)
         self.delay_sim_time(60)
         if (self.get_parameter("ARSPD_USE") == 1):
             self.progress("Sensor Re-Enabled")
         else:
             raise NotAchievedException("Airspeed Sensor Not Re-Enabled")
+        self.context_pop()
         self.disarm_vehicle(force=True)
 
     def AIRSPEED_AUTOCAL(self):
