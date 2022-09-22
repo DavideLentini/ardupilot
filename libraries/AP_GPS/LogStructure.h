@@ -76,6 +76,8 @@ struct PACKED log_GPA {
     uint32_t sample_ms;
     uint16_t delta_ms;
     float undulation;
+    uint16_t rtcm_fragments_used;
+    uint16_t rtcm_fragments_discarded;
 };
 
 /*
@@ -202,7 +204,7 @@ struct PACKED log_GPS_RAWS {
     { LOG_GPS_MSG, sizeof(log_GPS), \
       "GPS",  "QBBIHBcLLeffffB", "TimeUS,I,Status,GMS,GWk,NSats,HDop,Lat,Lng,Alt,Spd,GCrs,VZ,Yaw,U", "s#---SmDUmnhnh-", "F----0BGGB000--" , true }, \
     { LOG_GPA_MSG,  sizeof(log_GPA), \
-      "GPA",  "QBCCCCfBIHf", "TimeUS,I,VDop,HAcc,VAcc,SAcc,YAcc,VV,SMS,Delta,Und", "s#mmmnd-ssm", "F-BBBB0-CC0" , true }, \
+      "GPA",  "QBCCCCfBIHfHH", "TimeUS,I,VDop,HAcc,VAcc,SAcc,YAcc,VV,SMS,Delta,Und,RTCMFU,RTCMFD", "s#mmmnd-ssm--", "F-BBBB0-CC0--" , true }, \
     { LOG_GPS_UBX1_MSG, sizeof(log_Ubx1), \
       "UBX1", "QBHBBHI",  "TimeUS,Instance,noisePerMS,jamInd,aPower,agcCnt,config", "s#-----", "F------"  , true }, \
     { LOG_GPS_UBX2_MSG, sizeof(log_Ubx2), \
