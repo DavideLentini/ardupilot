@@ -1,6 +1,6 @@
 name: test chibios
 
-on: [push, pull_request, workflow_dispatch]
+on: [pull_request, workflow_dispatch]
 
 # paths:
 # - "*"
