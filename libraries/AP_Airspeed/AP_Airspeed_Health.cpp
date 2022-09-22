@@ -84,6 +84,22 @@ void AP_Airspeed::check_sensor_ahrs_wind_max_failures(uint8_t i)
     static const float DISABLE_PROB_THRESH_CRIT = 0.1f;
     static const float RE_ENABLE_PROB_THRESH_OK = 0.95f;
 
+    uint64_t now = AP_HAL::micros64();
+        AP::logger().WriteStreaming(
+            "ASPP",
+            "TimeUS,WM,Ena,UB,HP,DataImplausible,DataInconsistent",
+            "s---%--",
+            "F------",
+            "QfBBfBB",
+            now,
+            ((AP_Airspeed::OptionsMask::ON_FAILURE_AHRS_WIND_MAX_RECOVERY_DO_REENABLE & _options) != 0),
+            _wind_max,
+            state[i].failures.param_use_backup,
+            state[i].failures.health_probability,
+            data_is_implausible,
+            data_is_inconsistent
+            );
+
     if (param[i].use > 0) {
         if (((AP_Airspeed::OptionsMask::ON_FAILURE_AHRS_WIND_MAX_DO_DISABLE & _options) != 0) &&
                 (state[i].failures.health_probability < DISABLE_PROB_THRESH_CRIT)) {
