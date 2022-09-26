@@ -83,6 +83,7 @@ public:
         // LOWEHEISER = 4,
         DroneCAN = 5,
         CurrawongECU = 6,
+        Hirth = 6,
     };
 
     static AP_EFI *get_singleton(void) {
