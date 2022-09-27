@@ -494,3 +494,10 @@ uint64_t crc_crc64(const uint32_t *data, uint16_t num_words)
 
     return crc;
 }
+
+uint8_t checksum_sum_buffer(uint8_t sum, const uint8_t *buffer, uint16_t len) {
+    for (uint8_t i=0; i<len; i++) {
+        sum += buffer[i];
+    }
+    return sum;
+}

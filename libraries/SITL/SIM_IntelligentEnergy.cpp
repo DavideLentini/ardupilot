@@ -13,7 +13,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /*
-  Simulator for the RichenPower Hybrid generators
+  Simulator for the IntelligentEnergy Hybrid generators
 */
 
 #include <AP_Math/AP_Math.h>
