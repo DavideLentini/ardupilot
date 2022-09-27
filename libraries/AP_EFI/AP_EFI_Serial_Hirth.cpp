@@ -299,7 +299,7 @@ void AP_EFI_Serial_Hirth::decode_data() {
 
     case CODE_REQUEST_STATUS_2:
         internal_state.fuel_consumption_rate_cm3pm = (raw_data[52] | raw_data[53] << 0x08) / FUEL_CONSUMPTION_RESOLUTION;
-        internal_state.throttle_position_percent = (raw_data[62] | raw_data[63] << 0x08) / THROTTLE_POSITION_RESOLUTION;
+        internal_state.throttle_position_percent = (raw_data[62] | raw_data[63] << 0x08) * THROTTLE_POSITION_RESOLUTION;
         
         //EFI2 Log
         // internal_state.no_of_log_data = raw_data[52] | raw_data[53] << 0x08 | raw_data[53] << 0x08 | raw_data[53] << 0x08
