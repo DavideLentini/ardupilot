@@ -4347,6 +4347,7 @@ MAV_RESULT GCS_MAVLINK::handle_command_mag_cal(const mavlink_command_long_t &pac
 #endif
 }
 
+#if AP_MAVLINK_MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES_ENABLED
 MAV_RESULT GCS_MAVLINK::handle_command_request_autopilot_capabilities(const mavlink_command_long_t &packet)
 {
     if (!is_equal(packet.param1,1.0f)) {
@@ -4357,6 +4358,7 @@ MAV_RESULT GCS_MAVLINK::handle_command_request_autopilot_capabilities(const mavl
 
     return MAV_RESULT_ACCEPTED;
 }
+#endif
 
 
 MAV_RESULT GCS_MAVLINK::handle_command_do_send_banner(const mavlink_command_long_t &packet)
@@ -4611,10 +4613,13 @@ MAV_RESULT GCS_MAVLINK::handle_command_long_packet(const mavlink_command_long_t 
         result = handle_command_mount(packet);
         break;
 
+#if AP_MAVLINK_MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES_ENABLED
     case MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES: {
+        send_received_message_deprecation_warning("MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES");
         result = handle_command_request_autopilot_capabilities(packet);
         break;
     }
+#endif
 
     case MAV_CMD_DO_SET_ROI_SYSID:
         return handle_command_do_set_roi_sysid(packet);
