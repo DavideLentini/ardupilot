@@ -89,8 +89,12 @@ class SizeCompareBranches(object):
             "iofirmware": "iofirmware_highpolh",  # FIXME: lowpolh?
         }
 
+        blacklist = frozenset([
+            'OMNIBUSF7V2-bdshot',
+        ])
         if all_boards:
             self.board = sorted(list(self.boards_by_name.keys()), key=lambda x: x.lower())
+            self.board = filter(lambda x : x not in blacklist, self.board)
         else:
             # validate boards
             all_boards = set(self.boards_by_name.keys())
