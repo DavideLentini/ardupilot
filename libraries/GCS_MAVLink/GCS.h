@@ -105,6 +105,39 @@ void gcs_out_of_space_to_send(mavlink_channel_t chan);
         return (subclass_name *)_chan[ofs];                        \
     }
 
+class Links
+{
+public:
+    Links(class GCS_MAVLINK**_links, uint8_t &_num_links) :
+        links{_links},
+        num_links{_num_links}
+        {}
+
+    struct Iterator {
+        Iterator(GCS_MAVLINK **_link) : link{_link} {}
+        GCS_MAVLINK& operator*() const { return **link; }
+        GCS_MAVLINK* operator->() { return *link; }
+
+        // Prefix increment
+        Iterator& operator++() { link++; return *this; };
+        // Postfix increment
+        Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
+
+        friend bool operator== (const Iterator& a, const Iterator& b) { return a.link == b.link; };
+        friend bool operator!= (const Iterator& a, const Iterator& b) { return a.link != b.link; };
+    private:
+        GCS_MAVLINK **link;
+    };
+
+    Iterator begin() { return Iterator(&links[0]); }
+    Iterator end()   { return Iterator(&links[num_links]); }
+
+private:
+
+    GCS_MAVLINK**links;
+    uint8_t &num_links;
+};
+
 
 #define GCS_MAVLINK_NUM_STREAM_RATES 10
 class GCS_MAVLINK_Parameters
@@ -1089,6 +1122,7 @@ public:
     virtual const GCS_MAVLINK *chan(const uint8_t ofs) const = 0;
     // return the number of valid GCS objects
     uint8_t num_gcs() const { return _num_gcs; };
+    Links links{_chan, _num_gcs};
     void send_message(enum ap_message id);
     void send_mission_item_reached_message(uint16_t mission_index);
     void send_named_float(const char *name, float value) const;
@@ -1142,7 +1176,13 @@ public:
     bool install_alternative_protocol(mavlink_channel_t chan, GCS_MAVLINK::protocol_handler_fn_t handler);
 
     // get the VFR_HUD throttle
-    int16_t get_hud_throttle(void) const { return num_gcs()>0?chan(0)->vfr_hud_throttle():0; }
+    int16_t get_hud_throttle(void) const {
+        auto *c = chan(0);
+        if (c == nullptr) {
+            return 0;
+        }
+        return c->vfr_hud_throttle();
+    }
 
     // update uart pass-thru
     void update_passthru();
@@ -1158,6 +1198,7 @@ public:
     MAV_RESULT set_message_interval(uint8_t port_num, uint32_t msg_id, int32_t interval_us);
 
     uint8_t get_channel_from_port_number(uint8_t port_num);
+    GCS_MAVLINK *get_link_from_port_number(uint8_t port_num);
 
 #if HAL_HIGH_LATENCY2_ENABLED
     void enable_high_latency_connections(bool enabled);

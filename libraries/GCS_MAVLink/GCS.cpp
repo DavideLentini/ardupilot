@@ -84,8 +84,7 @@ void GCS::send_to_active_channels(uint32_t msgid, const char *pkt)
     if (entry == nullptr) {
         return;
     }
-    for (uint8_t i=0; i<num_gcs(); i++) {
-        GCS_MAVLINK &c = *chan(i);
+    for (auto &c : links) {
         if (c.is_private()) {
             continue;
         }
@@ -115,8 +114,7 @@ void GCS::send_named_float(const char *name, float value) const
 #if HAL_HIGH_LATENCY2_ENABLED
 void GCS::enable_high_latency_connections(bool enabled)
 {
-    for (uint8_t i=0; i<num_gcs(); i++) {
-        GCS_MAVLINK &c = *chan(i);
+    for (auto &c : links) {
         c.high_latency_link_enabled = enabled && c.is_high_latency_link;
     } 
     gcs().send_text(MAV_SEVERITY_NOTICE, "High Latency %s", enabled ? "enabled" : "disabled");
@@ -130,15 +128,16 @@ void GCS::enable_high_latency_connections(bool enabled)
  */
 bool GCS::install_alternative_protocol(mavlink_channel_t c, GCS_MAVLINK::protocol_handler_fn_t handler)
 {
-    if (c >= num_gcs()) {
+    auto *link = chan(c);
+    if (link == nullptr) {
         return false;
     }
-    if (chan(c)->alternative.handler && handler) {
+    if (link->alternative.handler && handler) {
         // already have one installed - we may need to add support for
         // multiple alternative handlers
         return false;
     }
-    chan(c)->alternative.handler = handler;
+    link->alternative.handler = handler;
     return true;
 }
 
