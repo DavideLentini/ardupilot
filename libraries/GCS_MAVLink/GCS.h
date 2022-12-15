@@ -92,16 +92,14 @@ void gcs_out_of_space_to_send(mavlink_channel_t chan);
 // then call its own specific methods on
 #define GCS_MAVLINK_CHAN_METHOD_DEFINITIONS(subclass_name) \
     subclass_name *chan(const uint8_t ofs) override {                   \
-        if (ofs > _num_gcs) {                                           \
-            INTERNAL_ERROR(AP_InternalError::error_t::gcs_offset);      \
+        if (ofs >= _num_gcs) {                                           \
             return nullptr;                                             \
         }                                                               \
         return (subclass_name *)_chan[ofs];                        \
     }                                                                   \
                                                                         \
     const subclass_name *chan(const uint8_t ofs) const override { \
-        if (ofs > _num_gcs) {                                           \
-            INTERNAL_ERROR(AP_InternalError::error_t::gcs_offset);      \
+        if (ofs >= _num_gcs) {                                           \
             return nullptr;                                             \
         }                                                               \
         return (subclass_name *)_chan[ofs];                        \
