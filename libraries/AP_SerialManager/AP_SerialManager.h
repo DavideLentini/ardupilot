@@ -170,6 +170,10 @@ public:
         SerialProtocol_MAVLinkHL = 43,
         SerialProtocol_Tramp = 44,
         SerialProtocol_HobbyWing = 45,
+        SerialProtocol_HobbyWing_DataLink = 46,
+        SerialProtocol_HobbyWing_PlatinumProV3 = 47,
+        SerialProtocol_HobbyWing_PlatinumV4 = 49,
+        SerialProtocol_HobbyWing_XRotorV4 = 60,
         SerialProtocol_NumProtocols                    // must be the last value
     };
 
