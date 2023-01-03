@@ -363,10 +363,6 @@ bool AP_OADatabase::is_close_to_item_in_database(const uint16_t index, const OA_
 // send ADSB_VEHICLE mavlink messages
 void AP_OADatabase::send_adsb_vehicle(mavlink_channel_t chan, uint16_t interval_ms)
 {
-    // ensure database's send_to_gcs field is large enough
-    static_assert(MAVLINK_COMM_NUM_BUFFERS <= sizeof(OA_DbItem::send_to_gcs) * 8,
-                  "AP_OADatabase's OA_DBItem.send_to_gcs bitmask must be large enough to hold MAVLINK_COMM_NUM_BUFFERS");
-
     if ((_output_level.get() <= (int8_t)OA_DbOutputLevel::OUTPUT_LEVEL_DISABLED) || !healthy()) {
         return;
     }

@@ -48,6 +48,22 @@ mavlink_system_t mavlink_system = {7,1};
 // routing table
 MAVLink_routing GCS_MAVLINK::routing;
 
+mavlink_message_t* mavlink_get_channel_buffer(uint8_t chan) {
+    GCS_MAVLINK *link = gcs().chan(chan);
+    if (link == nullptr) {
+        return nullptr;
+    }
+    return link->channel_buffer();
+}
+
+mavlink_status_t* mavlink_get_channel_status(uint8_t chan) {
+    GCS_MAVLINK *link = gcs().chan(chan);
+    if (link == nullptr) {
+        return nullptr;
+    }
+    return link->channel_status();
+}
+
 // set a channel as private. Private channels get sent heartbeats, but
 // don't get broadcast packets or forwarded packets
 void GCS_MAVLINK::set_channel_private(mavlink_channel_t _chan)
