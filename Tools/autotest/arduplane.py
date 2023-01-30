@@ -4144,6 +4144,45 @@ class AutoTestPlane(AutoTest):
             0) # button mask
         self.fly_home_land_and_disarm()
 
+    def trigger_airspeed_cal(self):
+        self.run_cmd(mavutil.mavlink.MAV_CMD_PREFLIGHT_CALIBRATION,
+                     0, 0, 1, 0, 0, 0, 0)
+
+    def AirspeedCal(self):
+        '''test Airspeed calibration'''
+
+        self.start_subtest('1 airspeed sensor')
+        self.context_push()
+        self.context_collect('STATUSTEXT')
+        self.trigger_airspeed_cal()
+        self.wait_statustext('Airspeed 1 calibrated', check_context=True)
+        self.context_pop()
+
+        self.context_push()
+        self.context_collect('STATUSTEXT')
+        self.start_subtest('0 airspeed sensors')
+        self.set_parameter('ARSPD_TYPE', 0)
+        self.reboot_sitl()
+        self.wait_statustext('No airspeed sensor present or enabled', check_context=True)
+        self.trigger_airspeed_cal()
+        self.delay_sim_time(5)
+        if self.statustext_in_collections('Airspeed 1 calibrated'):
+            raise NotAchievedException("Did not disable airspeed sensor?!")
+        self.context_pop()
+
+        self.start_subtest('2 airspeed sensors')
+        self.set_parameter('ARSPD_TYPE', 100)
+        self.set_parameter('ARSPD2_TYPE', 100)
+        self.reboot_sitl()
+        self.context_push()
+        self.context_collect('STATUSTEXT')
+        self.trigger_airspeed_cal()
+        self.wait_statustext('Airspeed 1 calibrated', check_context=True)
+        self.wait_statustext('Airspeed 2 calibrated', check_context=True)
+        self.context_pop()
+
+        self.reboot_sitl()
+
     def tests(self):
         '''return list of all tests'''
         ret = super(AutoTestPlane, self).tests()
@@ -4224,6 +4263,7 @@ class AutoTestPlane(AutoTest):
             self.AerobaticsScripting,
             self.MANUAL_CONTROL,
             self.WindEstimates,
+            self.AirspeedCal,
         ])
         return ret
 
