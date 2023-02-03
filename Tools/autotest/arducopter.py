@@ -7335,8 +7335,6 @@ class AutoTestCopter(AutoTest):
 
         self.assert_parameter_value("GEN_IDLE_TH", 25)
 
-        self.delay_sim_time(10)  # so we can actually receive messages...
-
         self.start_subtest("Checking GENERATOR_STATUS")
         self.set_message_rate_hz("GENERATOR_STATUS", 10)
 
@@ -7386,7 +7384,6 @@ class AutoTestCopter(AutoTest):
         self.start_subtest("Generator to idle")
         self.set_rc(gen_ctrl_ch, 1500) # remember this is a switch position - idle
         self.wait_statustext("Generator MIDDLE", check_context=True)
-        self.delay_sim_time(2)
         self.drain_mav()
         self.assert_received_message_field_values('EFI_STATUS', {
             "intake_manifold_pressure": 94,
@@ -7397,7 +7394,7 @@ class AutoTestCopter(AutoTest):
 
         self.wait_message_field_values('EFI_STATUS', {
             "cylinder_head_temperature": 20,
-        }, epsilon=5.0, timeout=10)
+        }, epsilon=5.0, timeout=20)
 
         self.assert_received_message_field_values('GENERATOR_STATUS', {
             "status": 0,
@@ -7408,8 +7405,8 @@ class AutoTestCopter(AutoTest):
             "rectifier_temperature": 32767,
             "bat_current_setpoint": float("nan"),
             "generator_temperature": 32767,
-            "runtime": 2,
-            "time_until_maintenance": 300*60*60 - 2,
+            "runtime": 1,
+            "time_until_maintenance": 300*60*60 - 1,
         })
         self.wait_generator_speed_and_state(2000, 3000, mavutil.mavlink.MAV_GENERATOR_STATUS_FLAG_IDLE)
 
@@ -7443,7 +7440,7 @@ class AutoTestCopter(AutoTest):
         if bs.voltages[0] != want_bs_volt:
             raise NotAchievedException("Battery voltage not as expected (want=%f) got=(%f)" % (want_bs_volt, bs.voltages[0],))
 
-        self.progress("Cheking battery remaining")
+        self.progress("Checking battery remaining")
         bs = self.assert_receive_message(
             "BATTERY_STATUS",
             condition="BATTERY_STATUS.id==2",  # id is zero-indexed
@@ -7522,24 +7519,29 @@ class AutoTestCopter(AutoTest):
         for i in 1000, rc_trim:
             self.progress("Checking %u pwm" % i)
             self.set_rc(loweheiser_man_throt_ch, i)
-            self.delay_sim_time(1)
-            self.assert_received_message_field_values('EFI_STATUS', {
+            self.wait_message_field_values('EFI_STATUS', {
                 "throttle_position": 0,
                 "rpm": 0,
-            })
-
-        # at 50 percent throttle
-        pwm_for_fifty_percent_throttle = int(rc_min + rc_dz + int((rc_max-rc_min-rc_dz)/2))
-        self.progress("Using PWM of %u for 50 percent throttle" % pwm_for_fifty_percent_throttle)
+            }, timeout=0.5)
 
         self.progress("Generator at idle should not run governor and use throttle input")
+        pwm_for_fifty_percent_throttle = int(rc_min + rc_dz + int((rc_max-rc_min-rc_dz)/2))
+        self.progress("Using PWM of %u for 50 percent throttle" % pwm_for_fifty_percent_throttle)
         self.set_rc(gen_ctrl_ch, 1500)
-        self.delay_sim_time(30)
         self.set_rc(loweheiser_man_throt_ch, pwm_for_fifty_percent_throttle)
         self.wait_message_field_values('EFI_STATUS', {
             # note that percent isn't honouring dead-zones...
-            "throttle_position": 51,  # magic fixed throttle value from AP_Generator_Loweheiser.cpp
+            "throttle_position": 51,
             "rpm": 4000,  # RPM for 50% throttle
+        }, timeout=20)
+
+        pwm_for_seventyfive_percent_throttle = int(rc_min + rc_dz + int((rc_max-rc_min-rc_dz)*3/4))
+        self.progress("Using PWM of %u for 75 percent throttle" % pwm_for_seventyfive_percent_throttle)
+        self.set_rc(loweheiser_man_throt_ch, pwm_for_seventyfive_percent_throttle)
+        self.wait_message_field_values('EFI_STATUS', {
+            # note that percent isn't honouring dead-zones...
+            "throttle_position": 75,
+            "rpm": 6000,  # RPM for 75% throttle
         }, timeout=20)
 
         self.assert_current_onboard_log_contains_message('LOEG')
@@ -7558,8 +7560,8 @@ class AutoTestCopter(AutoTest):
 
         self.wait_message_field_values('EFI_STATUS', {
             # note that percent isn't honouring dead-zones...
-            "throttle_position": 51,  # magic fixed throttle value from AP_Generator_Loweheiser.cpp
-            "rpm": 4000,  # RPM for 50% throttle
+            "throttle_position": 75,
+            "rpm": 6000,  # RPM for 75% throttle
         }, timeout=20)
 
         self.start_subtest("Battery Failsafes")
